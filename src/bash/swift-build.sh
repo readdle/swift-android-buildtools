@@ -14,12 +14,5 @@ libs=-L.build/jniLibs/armeabi-v7a
 
 flags="-Xcc $include -Xswiftc $include -Xswiftc $libs"
 
-destination_json=`mktemp`
-$SELF_DIR/generate-destination-json.sh > $destination_json
-
-$SWIFT_ANDROID_HOME/toolchain/usr/bin/swift-build --destination=$destination_json $flags "$@"
-return_code=$? 
-        
-rm -rf $destination_json
-
-exit $return_code
+$SWIFT_ANDROID_HOME/toolchain/usr/bin/swift-build --destination=<($SELF_DIR/generate-destination-json.sh) $flags "$@"
+exit $?
