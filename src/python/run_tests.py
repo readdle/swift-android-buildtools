@@ -2,9 +2,10 @@
 from __future__ import print_function
 
 from os import getenv
-from os.path import expanduser
-
 from utils import *
+
+self_dir = os.path.dirname(__file__)
+swift_build = os.path.join(self_dir, "swift-build")
 
 
 def extract_tests_package(package):
@@ -47,10 +48,7 @@ def run(skip_build=False, skip_push=False,
 
     if not skip_build:
         sh_checked(
-            [
-                expanduser("~/.gradle/scripts/swift-build.sh"), 
-                "--build-tests"
-            ] + build_args
+            [swift_build, "--build-tests"] + build_args
         )
 
     package = get_package_description()
