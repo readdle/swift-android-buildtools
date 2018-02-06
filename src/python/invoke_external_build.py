@@ -18,7 +18,13 @@ def make_env():
     mkdirs(external_include_dir)
     mkdirs(pm_build_dir)
 
+    if BuildConfig.is_debug():
+        NDK_DEBUG = True
+    else:
+        NDK_DEBUG = False
+
     return {
+        "NDK_DEBUG": str(int(NDK_DEBUG)),
         "SWIFT_LIB": swift_lib,
         "SWIFT_PM_EXTERNAL_LIBS": external_build_dir,
         "SWIFT_PM_EXTERNAL_INCLUDE": external_include_dir,
