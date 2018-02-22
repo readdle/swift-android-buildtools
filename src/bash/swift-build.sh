@@ -5,22 +5,17 @@
 SELF_DIR=$(dirname $0)
 SELF_DIR=$SELF_DIR/src/bash
 
-export PATH="$SWIFT_ANDROID_HOME/toolchain/usr/bin:$PATH"
-export CC="$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/darwin-x86_64/bin/clang"
-export SWIFT_EXEC=$SELF_DIR/swiftc-android.sh
+XCODE_SWIFTC=$(xcrun --find swiftc)
+XCODE_SWIFT_BUILD=$(xcrun --find swift-build)
 
-# all dynamic lookup should be done here
-# because of strange sandbox like environment
-# inside Swift PM called scripts
-export _XCODE_SWIFT=$(xcrun --find swift)
-export _XCODE_TOOLCHAIN=$(dirname $(dirname $(dirname $_XCODE_SWIFT)))
+export CC="$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/darwin-x86_64/bin/clang"
+export SWIFT_EXEC=$SWIFT_ANDROID_HOME/toolchain/usr/bin/swiftc
+export SWIFT_EXEC_MANIFEST=$XCODE_SWIFTC
 
 include=-I.build/jniLibs/include
 libs=-L.build/jniLibs/armeabi-v7a
 
 flags="-Xcc $include -Xswiftc $include -Xswiftc $libs"
 
-DYLD_LIBRARY_PATH=$_XCODE_TOOLCHAIN/usr/lib/swift/macosx/ \
-    $SWIFT_ANDROID_HOME/toolchain/usr/bin/swift-build --destination=<($SELF_DIR/generate-destination-json.sh) $flags "$@"
-
+$XCODE_SWIFT_BUILD --destination=<($SELF_DIR/generate-destination-json.sh) $flags "$@"
 exit $?
