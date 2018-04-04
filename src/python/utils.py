@@ -170,7 +170,7 @@ def adb_push(dst, files):
 
 
 def adb_shell(args):
-    return sh_checked(["adb", "shell"] + args)
+    sh_checked(["adb", "shell"] + args)
 
 
 def check_swift_home():
