@@ -14,68 +14,54 @@ def copy_resources():
     """
     Copying resources to Android device by using `adb_push`
 
-    It trying to find `copy_resources.json` file inside `build-android-swift` folder,
+    It trying to find `resources.json` file inside `build-android-swift` folder,
     this file contains instructions, which file need to be adb_push to device
 
+    Files will be located under `/data/local/tmp/${Testing Folder}/resources` -> `/data/local/tmp/RDEWSFrameworkPackageTests/resources`
 
-    Sample `copy_resources.json` file:
+    Sample `resources.json` file:
+
     [
-      {
-        "from": [
-            {
-                "folder": "ewsSwiftTestAppTests/Resources",
-                "files": ["getAttachmentServerResponse_dried.xml", "getItemServerResponse1.xml","getItemServerResponse2.xml","ewsResp9m.xml","mime_sample_1.eml","mime_sample_2.eml",
-                        "mime_sample_3.eml", "mime_sample_4.eml", "mime_sample_5.eml", "mime_sample_6.eml",
-                        "Hello.literal", "Stream.literal", "ewstestprov.testproviders"
-                ]
-            },
-            {
-                "folder": "build-android-swift",
-                "files": ["cacert.pem"]
-            }
-        ],
-        "to": "/data/local/tmp/RDEWSFrameworkPackageTests/resources"
-      }
+        "ewsSwiftTestAppTests/Resources/*.xml",
+        "ewsSwiftTestAppTests/Resources/*.eml",
+        "ewsSwiftTestAppTests/Resources/*.literal",
+        "ewsSwiftTestAppTests/Resources/mime_sample_*",
+        "build-android-swift/cacert.pem",
+        "somfolder/*"
     ]
+
     """
 
     import os
     import json
+    from glob import glob
 
-    copy_resources_filepath = "build-android-swift/copy_resources.json"
-
+    copy_resources_filepath = "build-android-swift/resources.json"
 
     if not os.path.exists(copy_resources_filepath):
         return
     else:
-        print ("Copy resources: %s is found!" % copy_resources_filepath)
+        print("Copy resources: %s is found!" % copy_resources_filepath)
 
-    resource_json = json.load(open(copy_resources_filepath))
+    dst = os.path.join(get_folder(get_name()), "resources")
 
     # Clean
-    for copy_task in resource_json:
-        adb_shell(["rm", "-rf", copy_task['to']])
-    for copy_task in resource_json:
-        adb_shell(["mkdir", "-p", copy_task['to']])
-
+    adb_shell(["rm", "-rf", dst])
+    adb_shell(["mkdir", "-p", dst])
 
     print("Copying resources...")
 
-    # Copy
-    for copy_task in resource_json:
-        src = []
-        for entity in  copy_task['from']:
-            folder = entity['folder']
-
-            for file in entity['files']:
-                src.append(os.path.join(folder, file))
-
-        adb_push(copy_task['to'], src)
+    resources = json.load(open(copy_resources_filepath))
+    for resource in resources:
+        adb_push(dst, glob(resource))
 
 
-def push(dst, name, skip_push_stdlib, skip_push_external):
+def push(dst, name, skip_push_stdlib, skip_push_external, skip_copy_resources):
     from os.path import join
     from glob import glob
+
+    if not skip_copy_resources:
+        copy_resources()
 
     adb_shell(["mkdir", "-p", dst])
 
@@ -88,7 +74,6 @@ def push(dst, name, skip_push_stdlib, skip_push_external):
     adb_push(dst, glob(join(Dirs.build_dir(), "*.so")))
     adb_push(dst, [join(Dirs.build_dir(), name)])
 
-    copy_resources()
 
 def exec_tests(folder, name, args):
     ld_path = "LD_LIBRARY_PATH=" + folder
@@ -111,6 +96,11 @@ def run(args):
     skip_push = args.skip_push or args.fast_mode
     skip_push_stdlib = args.skip_push_stdlib
     skip_push_external = args.skip_push_external
+    skip_copy_resources = args.skip_copy_resources
+
+    if args.copy_resources:
+        copy_resources()
+
     skip_testing = args.skip_testing
 
     if not skip_build:
@@ -122,7 +112,7 @@ def run(args):
     folder = get_folder(name)
 
     if not skip_push:
-        push(folder, name, skip_push_stdlib, skip_push_external)
+        push(folder, name, skip_push_stdlib, skip_push_external, skip_copy_resources)
 
     if not skip_testing:
         exec_tests(folder, name, args.test_args)
@@ -190,6 +180,24 @@ def main():
     )
 
     parser.add_argument(
+        "--skip-resources",
+        dest="skip_copy_resources",
+        action="store_true",
+        default=False,
+        help="Skip pushing resources to the device, on testing stage"
+    )
+
+    parser.add_argument(
+        "--copy-resources",
+        dest="copy_resources",
+        action="store_true",
+        default=False,
+        help="""Copy resources to device.
+                It can be used in a case just copying resources to the device.
+        """
+    )
+
+    parser.add_argument(
         "-Xbuild",
         dest="build_args",
         action="append",
@@ -213,4 +221,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
