@@ -98,9 +98,6 @@ def run(args):
     skip_push_external = args.skip_push_external
     skip_copy_resources = args.skip_copy_resources
 
-    if args.copy_resources:
-        copy_resources()
-
     skip_testing = args.skip_testing
 
     if not skip_build:
@@ -185,16 +182,6 @@ def main():
         action="store_true",
         default=False,
         help="Skip pushing resources to the device, on testing stage"
-    )
-
-    parser.add_argument(
-        "--copy-resources",
-        dest="copy_resources",
-        action="store_true",
-        default=False,
-        help="""Copy resources to device.
-                It can be used in a case just copying resources to the device.
-        """
     )
 
     parser.add_argument(
