@@ -10,6 +10,69 @@ def extract_tests_package(package):
     return package["name"] + "PackageTests.xctest"
 
 
+def copy_resources():
+    """
+    Copying resources to Android device by using `adb_push`
+
+    It trying to find `copy_resources.json` file inside `build-android-swift` folder,
+    this file contains instructions, which file need to be adb_push to device
+
+
+    Sample `copy_resources.json` file:
+    [
+      {
+        "from": [
+            {
+                "folder": "ewsSwiftTestAppTests/Resources",
+                "files": ["getAttachmentServerResponse_dried.xml", "getItemServerResponse1.xml","getItemServerResponse2.xml","ewsResp9m.xml","mime_sample_1.eml","mime_sample_2.eml",
+                        "mime_sample_3.eml", "mime_sample_4.eml", "mime_sample_5.eml", "mime_sample_6.eml",
+                        "Hello.literal", "Stream.literal", "ewstestprov.testproviders"
+                ]
+            },
+            {
+                "folder": "build-android-swift",
+                "files": ["cacert.pem"]
+            }
+        ],
+        "to": "/data/local/tmp/RDEWSFrameworkPackageTests/resources"
+      }
+    ]
+    """
+
+    import os
+    import json
+
+    copy_resources_filepath = "build-android-swift/copy_resources.json"
+
+
+    if not os.path.exists(copy_resources_filepath):
+        return
+    else:
+        print ("Copy resources: %s is found!" % copy_resources_filepath)
+
+    resource_json = json.load(open(copy_resources_filepath))
+
+    # Clean
+    for copy_task in resource_json:
+        adb_shell(["rm", "-rf", copy_task['to']])
+    for copy_task in resource_json:
+        adb_shell(["mkdir", "-p", copy_task['to']])
+
+
+    print("Copying resources...")
+
+    # Copy
+    for copy_task in resource_json:
+        src = []
+        for entity in  copy_task['from']:
+            folder = entity['folder']
+
+            for file in entity['files']:
+                src.append(os.path.join(folder, file))
+
+        adb_push(copy_task['to'], src)
+
+
 def push(dst, name, skip_push_stdlib, skip_push_external):
     from os.path import join
     from glob import glob
@@ -25,6 +88,7 @@ def push(dst, name, skip_push_stdlib, skip_push_external):
     adb_push(dst, glob(join(Dirs.build_dir(), "*.so")))
     adb_push(dst, [join(Dirs.build_dir(), name)])
 
+    copy_resources()
 
 def exec_tests(folder, name, args):
     ld_path = "LD_LIBRARY_PATH=" + folder
@@ -86,10 +150,10 @@ def main():
     )
 
     parser.add_argument(
-        "--skip-build", 
+        "--skip-build",
         dest="skip_build",
         action="store_true",
-        help="Skip rebuilding. Only deploy and run.", 
+        help="Skip rebuilding. Only deploy and run.",
     )
 
     parser.add_argument(
@@ -128,7 +192,7 @@ def main():
     parser.add_argument(
         "-Xbuild",
         dest="build_args",
-        action="append", 
+        action="append",
         default=[],
         help="Pass flag through to Swift PM"
     )
@@ -136,7 +200,7 @@ def main():
     parser.add_argument(
         "-Xtest",
         dest="test_args",
-        action="append", 
+        action="append",
         default=[],
         help="Pass flag through to XCTest"
     )
@@ -149,3 +213,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
