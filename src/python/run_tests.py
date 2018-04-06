@@ -35,8 +35,10 @@ def copy_resources():
     import os
     import json
     from glob import glob
+    base_dir = Dirs.base_dir()
 
-    copy_resources_filepath = "build-android-swift/resources.json"
+
+    copy_resources_filepath = os.path.join(base_dir, "build-android-swift/resources.json")
 
     if not os.path.exists(copy_resources_filepath):
         return
@@ -53,7 +55,7 @@ def copy_resources():
 
     resources = json.load(open(copy_resources_filepath))
     for resource in resources:
-        adb_push(dst, glob(resource))
+        adb_push(dst, glob(os.path.join(base_dir, resource)) )
 
 
 def push(dst, name, skip_push_stdlib, skip_push_external, skip_push_resources):
