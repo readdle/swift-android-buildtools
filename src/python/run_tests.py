@@ -10,11 +10,62 @@ def extract_tests_package(package):
     return package["name"] + "PackageTests.xctest"
 
 
-def push(dst, name, skip_push_stdlib, skip_push_external):
+def copy_resources():
+    """
+    Copying resources to Android device by using `adb_push`
+
+    It trying to find `resources.json` file inside `build-android-swift` folder,
+    this file contains instructions, which file need to be adb_push to device
+
+    Files will be located under `/data/local/tmp/${Testing Folder}/resources` -> `/data/local/tmp/RDEWSFrameworkPackageTests/resources`
+
+    Sample `resources.json` file:
+
+    [
+        "ewsSwiftTestAppTests/Resources/*.xml",
+        "ewsSwiftTestAppTests/Resources/*.eml",
+        "ewsSwiftTestAppTests/Resources/*.literal",
+        "ewsSwiftTestAppTests/Resources/mime_sample_*",
+        "build-android-swift/cacert.pem",
+        "somfolder/*"
+    ]
+
+    """
+
+    import os
+    import json
+    from glob import glob
+    base_dir = Dirs.base_dir()
+
+
+    copy_resources_filepath = os.path.join(base_dir, "build-android-swift/resources.json")
+
+    if not os.path.exists(copy_resources_filepath):
+        return
+    else:
+        print("Copy resources: %s is found!" % copy_resources_filepath)
+
+    dst = os.path.join(get_folder(get_name()), "resources")
+
+    # Clean
+    adb_shell(["rm", "-rf", dst])
+    adb_shell(["mkdir", "-p", dst])
+
+    print("Copying resources...")
+
+    resources = json.load(open(copy_resources_filepath))
+    for resource in resources:
+        adb_push(dst, glob(os.path.join(base_dir, resource)) )
+
+
+def push(dst, name, skip_push_stdlib, skip_push_external, skip_push_resources):
     from os.path import join
     from glob import glob
 
     adb_shell(["mkdir", "-p", dst])
+
+    if not skip_push_resources:
+        copy_resources()
 
     if not skip_push_stdlib:
         adb_push(dst, glob(join(SWIFT_ANDROID_HOME, "toolchain/usr/lib/swift/android", "*.so")))
@@ -47,6 +98,8 @@ def run(args):
     skip_push = args.skip_push or args.fast_mode
     skip_push_stdlib = args.skip_push_stdlib
     skip_push_external = args.skip_push_external
+    skip_push_resources = args.skip_push_resources
+
     skip_testing = args.skip_testing
 
     if not skip_build:
@@ -58,7 +111,7 @@ def run(args):
     folder = get_folder(name)
 
     if not skip_push:
-        push(folder, name, skip_push_stdlib, skip_push_external)
+        push(folder, name, skip_push_stdlib, skip_push_external, skip_push_resources)
 
     if not skip_testing:
         exec_tests(folder, name, args.test_args)
@@ -86,10 +139,10 @@ def main():
     )
 
     parser.add_argument(
-        "--skip-build", 
+        "--skip-build",
         dest="skip_build",
         action="store_true",
-        help="Skip rebuilding. Only deploy and run.", 
+        help="Skip rebuilding. Only deploy and run.",
     )
 
     parser.add_argument(
@@ -126,9 +179,17 @@ def main():
     )
 
     parser.add_argument(
+        "--skip-push-resources",
+        dest="skip_push_resources",
+        action="store_true",
+        default=False,
+        help="Skip pushing resources to the device."
+    )
+
+    parser.add_argument(
         "-Xbuild",
         dest="build_args",
-        action="append", 
+        action="append",
         default=[],
         help="Pass flag through to Swift PM"
     )
@@ -136,7 +197,7 @@ def main():
     parser.add_argument(
         "-Xtest",
         dest="test_args",
-        action="append", 
+        action="append",
         default=[],
         help="Pass flag through to XCTest"
     )
