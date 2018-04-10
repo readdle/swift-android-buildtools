@@ -170,7 +170,14 @@ def adb_push(dst, files):
 
 
 def adb_shell(args):
-    sh_checked(["adb", "shell"] + args)
+    env = []
+
+    for key, value in os.environ.iteritems():
+        if key.startswith("X_ANDROID"):
+            name = key[len("X_ANDROID_"):]
+            env.append(name + "=" + value)
+
+    sh_checked(["adb", "shell"] + env + args)
 
 
 def check_swift_home():
