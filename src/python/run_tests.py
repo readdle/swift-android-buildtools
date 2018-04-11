@@ -1,95 +1,39 @@
 #!/usr/bin/env python
 from __future__ import print_function
 from utils import *
+from resources import copy_resources
+
 
 self_dir = os.path.dirname(__file__)
 swift_build = os.path.join(self_dir, "swift-build")
-
-
-def extract_tests_package(package):
-    return package["name"] + "PackageTests.xctest"
-
-
-def copy_resources():
-    """
-    Copying resources to Android device by using `adb_push`
-
-    It trying to find `resources.json` file inside `build-android-swift` folder,
-    this file contains instructions, which file need to be adb_push to device
-
-    Files will be located under `/data/local/tmp/${Testing Folder}/resources` -> `/data/local/tmp/RDEWSFrameworkPackageTests/resources`
-
-    Sample `resources.json` file:
-
-    [
-        "ewsSwiftTestAppTests/Resources/*.xml",
-        "ewsSwiftTestAppTests/Resources/*.eml",
-        "ewsSwiftTestAppTests/Resources/*.literal",
-        "ewsSwiftTestAppTests/Resources/mime_sample_*",
-        "build-android-swift/cacert.pem",
-        "somfolder/*"
-    ]
-
-    """
-
-    import os
-    import json
-    from glob import glob
-    base_dir = Dirs.base_dir()
-
-    copy_resources_filepath = os.path.join(base_dir, "build-android-swift/resources.json")
-
-    if not os.path.exists(copy_resources_filepath):
-        return
-    else:
-        print("Copy resources: %s is found!" % copy_resources_filepath)
-
-    dst = os.path.join(get_folder(get_name()), "resources")
-
-    # Clean
-    adb_shell(["rm", "-rf", dst])
-    adb_shell(["mkdir", "-p", dst])
-
-    print("Copying resources...")
-
-    resources = json.load(open(copy_resources_filepath))
-    for resource in resources:
-        adb_push(dst, glob(os.path.join(base_dir, resource)))
 
 
 def push(dst, name, skip_push_stdlib, skip_push_external, skip_push_resources):
     from os.path import join
     from glob import glob
 
-    adb_shell(["mkdir", "-p", dst])
+    ADB.makedirs(dst)
 
     if not skip_push_resources:
         copy_resources()
 
     if not skip_push_stdlib:
-        adb_push(dst, glob(join(SWIFT_ANDROID_HOME, "toolchain/usr/lib/swift/android", "*.so")))
+        ADB.push(dst, glob(join(SWIFT_ANDROID_HOME, "toolchain/usr/lib/swift/android", "*.so")))
 
     if not skip_push_external:
-        adb_push(dst, glob(join(Dirs.external_libs_dir(), "*.so")))
+        ADB.push(dst, glob(join(Dirs.external_libs_dir(), "*.so")))
 
-    adb_push(dst, glob(join(Dirs.build_dir(), "*.so")))
-    adb_push(dst, [join(Dirs.build_dir(), name)])
+    ADB.push(dst, glob(join(Dirs.build_dir(), "*.so")))
+    ADB.push(dst, [join(Dirs.build_dir(), name)])
 
 
 def exec_tests(folder, name, args):
     ld_path = "LD_LIBRARY_PATH=" + folder
     test_path = folder + "/" + name
 
-    adb_shell([ld_path, test_path] + args)
+    ADB.shell([ld_path, test_path] + args)
 
 
-def get_name():
-    package = get_package_description()
-    return extract_tests_package(package)
-
-
-def get_folder(name):
-    return "/data/local/tmp/" + name.split(".")[0]
 
 
 def run(args):
@@ -106,8 +50,8 @@ def run(args):
             [swift_build, "--build-tests"] + args.build_args
         )
 
-    name = get_name()
-    folder = get_folder(name)
+    name = TestingApp.get_name()
+    folder = TestingApp.get_folder(name)
 
     if not skip_push:
         push(folder, name, skip_push_stdlib, skip_push_external, skip_push_resources)
