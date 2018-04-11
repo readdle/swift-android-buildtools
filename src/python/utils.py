@@ -158,6 +158,45 @@ class Dirs(object):
     def external_libs_dir(cls):
         return os.path.join(cls.external_out_dir(), BuildConfig.abi())
 
+class TestingApp(object):
+    @classmethod
+    def extract_tests_package(cls, package):
+        return package["name"] + "PackageTests.xctest"
+
+    @classmethod
+    def get_name(cls):
+        package = get_package_description()
+        return cls.extract_tests_package(package)
+
+    @classmethod
+    def get_folder(cls, name):
+        return "/data/local/tmp/" + name.split(".")[0]
+
+    @classmethod
+    def get_app_folder(cls):
+        return cls.get_folder(cls.get_name())
+
+class ADB(object):
+    @classmethod
+    def push(cls, dst, files):
+        for f in files:
+            sh_checked(["adb", "push", f, dst])
+
+    @classmethod
+    def shell(cls, args):
+        env = []
+
+        for key, value in os.environ.iteritems():
+            if key.startswith("X_ANDROID"):
+                name = key[len("X_ANDROID_"):]
+                env.append(name + "=" + value)
+
+        sh_checked(["adb", "shell"] + env + args)
+
+    @classmethod
+    def makedirs(cls, dir):
+        cls.shell(["mkdir", "-p", dir])
+
 
 def traverse_dependencies(func, include_root=False):
     _traverse(_get_packages_tree(), include_root, func)
@@ -172,22 +211,6 @@ def copytree(src, dst):
         return
 
     subprocess.call(["rsync", "-r"] + src_files + [dst])
-
-
-def adb_push(dst, files):
-    for f in files:
-        sh_checked(["adb", "push", f, dst])
-
-
-def adb_shell(args):
-    env = []
-
-    for key, value in os.environ.iteritems():
-        if key.startswith("X_ANDROID"):
-            name = key[len("X_ANDROID_"):]
-            env.append(name + "=" + value)
-
-    sh_checked(["adb", "shell"] + env + args)
 
 
 def check_swift_home():
