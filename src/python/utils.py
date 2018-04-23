@@ -81,12 +81,13 @@ def _traverse(root_node, include_root, func):
     def inner(node):
         children = node["dependencies"]
         path = node["path"]
+        name = node["name"]
 
         for sub_node in children:
             inner(sub_node)
 
         if path not in seen:
-            func(path)
+            func(path, name)
             seen.add(path)
 
     inner(root_node)
@@ -130,23 +131,32 @@ class Dirs(object):
 
     @classmethod
     @memoized
-    def build_dir(cls):
-        return os.path.join(cls.base_dir(), ".build", BuildConfig.triple(), BuildConfig.configuration())
+    def build_root(cls):
+        return os.path.join(cls.base_dir(), ".build")
 
     @classmethod
     @memoized
-    def external_build_dir(cls):
-        return os.path.join(cls.base_dir(), ".build", "jniLibs")
+    def build_dir(cls):
+        return os.path.join(cls.build_root(), BuildConfig.triple(), BuildConfig.configuration())
+
+    @classmethod
+    def external_build_root(cls, name):
+        return os.path.join(cls.build_root(), "external-build", name)
+
+    @classmethod
+    @memoized
+    def external_out_dir(cls):
+        return os.path.join(cls.build_root(), "jniLibs")
 
     @classmethod
     @memoized
     def external_include_dir(cls):
-        return os.path.join(cls.external_build_dir(), "include")
+        return os.path.join(cls.external_out_dir(), "include")
 
     @classmethod
     @memoized
     def external_libs_dir(cls):
-        return os.path.join(cls.external_build_dir(), BuildConfig.abi())
+        return os.path.join(cls.external_out_dir(), BuildConfig.abi())
 
 
 def traverse_dependencies(func, include_root=False):
