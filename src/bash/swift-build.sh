@@ -20,5 +20,7 @@ libs=-L.build/jniLibs/armeabi-v7a
 
 flags="-Xcc $include -Xswiftc $include -Xswiftc $libs"
 
-$SWIFT_ANDROID_HOME/toolchain/usr/bin/swift-build --destination=<($SELF_DIR/generate-destination-json.sh) $flags "$@"
+DYLD_LIBRARY_PATH=$_XCODE_TOOLCHAIN/usr/lib/swift/macosx/ \
+    $SWIFT_ANDROID_HOME/toolchain/usr/bin/swift-build --destination=<($SELF_DIR/generate-destination-json.sh) $flags "$@"
+
 exit $?
