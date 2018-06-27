@@ -119,7 +119,7 @@ class BuildConfig(object):
 
     @classmethod
     def is_debug(cls):
-        cls.configuration() == "debug"
+        return cls.configuration() == "debug"
 
 
 class Dirs(object):
