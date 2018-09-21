@@ -1,80 +1,95 @@
 #!/usr/bin/env python
 from __future__ import print_function
-
-from os import getenv
 from utils import *
+from resources import copy_resources
+
 
 self_dir = os.path.dirname(__file__)
 swift_build = os.path.join(self_dir, "swift-build")
 
 
-def extract_tests_package(package):
-    return package["name"] + "PackageTests.xctest"
-
-
-def push(dst, name, skip_push_stdlib, skip_push_external):
+def push(dst, name, skip_push_stdlib, skip_push_external, skip_push_resources):
     from os.path import join
     from glob import glob
 
-    adb_shell(["mkdir", "-p", dst])
+    ADB.makedirs(dst)
+
+    if not skip_push_resources:
+        copy_resources()
 
     if not skip_push_stdlib:
-        adb_push(dst, glob(join(SWIFT_ANDROID_HOME, "toolchain/usr/lib/swift/android", "*.so")))
+        ADB.push(dst, glob(join(SWIFT_ANDROID_HOME, "toolchain/usr/lib/swift/android", "*.so")))
 
     if not skip_push_external:
-        adb_push(dst, glob(join(Dirs.external_libs_dir(), "*.so")))
+        ADB.push(dst, glob(join(Dirs.external_libs_dir(), "*.so")))
 
-    adb_push(dst, glob(join(Dirs.build_dir(), "*.so")))
-    adb_push(dst, [join(Dirs.build_dir(), name)])
+    ADB.push(dst, glob(join(Dirs.build_dir(), "*.so")))
+    ADB.push(dst, [join(Dirs.build_dir(), name)])
 
 
 def exec_tests(folder, name, args):
     ld_path = "LD_LIBRARY_PATH=" + folder
     test_path = folder + "/" + name
 
-    return adb_shell([ld_path, test_path] + args)
+    ADB.shell([ld_path, test_path] + args)
 
 
-def run(skip_build=False, skip_push=False,
-        skip_push_stdlib=False, skip_push_external=False,
-        build_args=None, test_args=None):
 
-    if test_args is None:
-        test_args = []
-    if build_args is None:
-        build_args = []
 
-    skip_build = skip_build or skip_push
+def run(args):
+    skip_build = args.skip_build or args.fast_mode
+    skip_push = args.skip_push or args.fast_mode
+    skip_push_stdlib = args.skip_push_stdlib
+    skip_push_external = args.skip_push_external
+    skip_push_resources = args.skip_push_resources
+
+    skip_testing = args.skip_testing
 
     if not skip_build:
         sh_checked(
-            [swift_build, "--build-tests"] + build_args
+            [swift_build, "--build-tests"] + args.build_args
         )
 
-    package = get_package_description()
-    name = extract_tests_package(package)
-    folder = "/data/local/tmp/" + name.split(".")[0]
+    name = TestingApp.get_name()
+    folder = TestingApp.get_folder(name)
 
     if not skip_push:
-        push(folder, name, skip_push_stdlib, skip_push_external)
+        push(folder, name, skip_push_stdlib, skip_push_external, skip_push_resources)
 
-    return exec_tests(folder, name, test_args)
+    if not skip_testing:
+        exec_tests(folder, name, args.test_args)
 
 
-if __name__ == "__main__":
-    from argparse import ArgumentParser
+def main():
+    from arg_parser_ext import ArgumentParserOpt
 
-    parser = ArgumentParser()
+    parser = ArgumentParserOpt(description="Build and run swift tests on Android")
 
     parser.add_argument(
-        "--skip-build", 
-        dest="skip_build",
+        "-f", "--fast", "--just-run",
+        dest="fast_mode",
         action="store_true",
-        help="Skip rebuilding. Only deploy and run.", 
+        default=False,
+        help="Fast mode. Just run. Alias for --skip-build --skip-push"
     )
 
     parser.add_argument(
-        "-f", "--skip-push",
+        "-d", "--deploy",
+        dest="skip_testing",
+        action="store_true",
+        default=False,
+        help="Build and push. Alias for --skip-testing"
+    )
+
+    parser.add_argument(
+        "--skip-build",
+        dest="skip_build",
+        action="store_true",
+        help="Skip rebuilding. Only deploy and run.",
+    )
+
+    parser.add_argument(
+        "--skip-push",
         dest="skip_push",
         action="store_true",
         default=False,
@@ -86,7 +101,7 @@ if __name__ == "__main__":
         dest="skip_push_stdlib",
         action="store_true",
         default=False,
-        help="Dont push externaly builded libraries"
+        help="Don't push externally built libraries"
     )
 
     parser.add_argument(
@@ -94,13 +109,30 @@ if __name__ == "__main__":
         dest="skip_push_external",
         action="store_true",
         default=False,
-        help="Dont push toolchain libraries"
+        help="Don't push toolchain libraries"
+    )
+
+    parser.add_argument(
+        "--skip-testing",
+        dest="skip_testing",
+        action="store_true",
+        default=False,
+        help="Don't execute tests on device.\n"
+             "Useful when you need build and deploy then run manually with different tool (simpleperf, lldb etc.)"
+    )
+
+    parser.add_argument(
+        "--skip-push-resources",
+        dest="skip_push_resources",
+        action="store_true",
+        default=False,
+        help="Skip pushing resources to the device."
     )
 
     parser.add_argument(
         "-Xbuild",
         dest="build_args",
-        action="append", 
+        action="append",
         default=[],
         help="Pass flag through to Swift PM"
     )
@@ -108,7 +140,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "-Xtest",
         dest="test_args",
-        action="append", 
+        action="append",
         default=[],
         help="Pass flag through to XCTest"
     )
@@ -116,9 +148,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     check_swift_home()
-    run(args.skip_build, 
-        args.skip_push, 
-        args.skip_push_stdlib,
-        args.skip_push_external,
-        args.build_args, 
-        args.test_args)
+    run(args)
+
+
+if __name__ == "__main__":
+    main()

@@ -8,7 +8,7 @@ def copy_prebuilt(src, dst):
     copytree(os.path.join(src, "include", "*"), dst)
 
 
-def copy_prebuilt_task(module):
+def copy_prebuilt_task(module, name):
     dst = Dirs.build_dir()
     
     mkdirs(dst)

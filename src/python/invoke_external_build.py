@@ -6,15 +6,18 @@ import collect_dependencies
 from utils import *
 
 
-def make_env():
+def make_env(name):
     swift_lib = os.path.join(SWIFT_ANDROID_HOME, "toolchain", "usr", "lib", "swift")
-    external_build_dir = Dirs.external_build_dir()
+
+    external_build_root = Dirs.external_build_root(name)
+    external_out_dir = Dirs.external_out_dir()
     external_include_dir = Dirs.external_include_dir()
 
     pm_build_dir = Dirs.build_dir()
 
     mkdirs(swift_lib)
-    mkdirs(external_build_dir)
+    mkdirs(external_build_root)
+    mkdirs(external_out_dir)
     mkdirs(external_include_dir)
     mkdirs(pm_build_dir)
 
@@ -26,9 +29,10 @@ def make_env():
     return {
         "NDK_DEBUG": str(int(NDK_DEBUG)),
         "SWIFT_LIB": swift_lib,
-        "SWIFT_PM_EXTERNAL_LIBS": external_build_dir,
+        "SWIFT_PM_EXTERNAL_BUILD_ROOT": external_build_root,
+        "SWIFT_PM_EXTERNAL_LIBS": external_out_dir,
         "SWIFT_PM_EXTERNAL_INCLUDE": external_include_dir,
-        "SWIFT_PM_BUILD_DIR": pm_build_dir
+        "SWIFT_PM_BUILD_DIR": pm_build_dir,
     }
 
 
@@ -40,13 +44,13 @@ def is_executable(path):
     return os.path.isfile(path) and os.access(path, os.X_OK)
 
 
-def invoke_external(path):
+def invoke_external(path, name):
     script = get_script_path(path)
 
     if not is_executable(script):
         return
 
-    sh_checked([script], env=make_env())
+    sh_checked([script], env=make_env(name))
 
 
 def run():

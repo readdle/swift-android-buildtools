@@ -81,12 +81,13 @@ def _traverse(root_node, include_root, func):
     def inner(node):
         children = node["dependencies"]
         path = node["path"]
+        name = node["name"]
 
         for sub_node in children:
             inner(sub_node)
 
         if path not in seen:
-            func(path)
+            func(path, name)
             seen.add(path)
 
     inner(root_node)
@@ -118,7 +119,7 @@ class BuildConfig(object):
 
     @classmethod
     def is_debug(cls):
-        cls.configuration() == "debug"
+        return cls.configuration() == "debug"
 
 
 class Dirs(object):
@@ -130,23 +131,71 @@ class Dirs(object):
 
     @classmethod
     @memoized
-    def build_dir(cls):
-        return os.path.join(cls.base_dir(), ".build", BuildConfig.triple(), BuildConfig.configuration())
+    def build_root(cls):
+        return os.path.join(cls.base_dir(), ".build")
 
     @classmethod
     @memoized
-    def external_build_dir(cls):
-        return os.path.join(cls.base_dir(), ".build", "jniLibs")
+    def build_dir(cls):
+        return os.path.join(cls.build_root(), BuildConfig.triple(), BuildConfig.configuration())
+
+    @classmethod
+    def external_build_root(cls, name):
+        return os.path.join(cls.build_root(), "external-build", name)
+
+    @classmethod
+    @memoized
+    def external_out_dir(cls):
+        return os.path.join(cls.build_root(), "jniLibs")
 
     @classmethod
     @memoized
     def external_include_dir(cls):
-        return os.path.join(cls.external_build_dir(), "include")
+        return os.path.join(cls.external_out_dir(), "include")
 
     @classmethod
     @memoized
     def external_libs_dir(cls):
-        return os.path.join(cls.external_build_dir(), BuildConfig.abi())
+        return os.path.join(cls.external_out_dir(), BuildConfig.abi())
+
+class TestingApp(object):
+    @classmethod
+    def extract_tests_package(cls, package):
+        return package["name"] + "PackageTests.xctest"
+
+    @classmethod
+    def get_name(cls):
+        package = get_package_description()
+        return cls.extract_tests_package(package)
+
+    @classmethod
+    def get_folder(cls, name):
+        return "/data/local/tmp/" + name.split(".")[0]
+
+    @classmethod
+    def get_app_folder(cls):
+        return cls.get_folder(cls.get_name())
+
+class ADB(object):
+    @classmethod
+    def push(cls, dst, files):
+        for f in files:
+            sh_checked(["adb", "push", f, dst])
+
+    @classmethod
+    def shell(cls, args):
+        env = []
+
+        for key, value in os.environ.iteritems():
+            if key.startswith("X_ANDROID"):
+                name = key[len("X_ANDROID_"):]
+                env.append(name + "=" + value)
+
+        sh_checked(["adb", "shell"] + env + args)
+
+    @classmethod
+    def makedirs(cls, dir):
+        cls.shell(["mkdir", "-p", dir])
 
 
 def traverse_dependencies(func, include_root=False):
@@ -162,15 +211,6 @@ def copytree(src, dst):
         return
 
     subprocess.call(["rsync", "-r"] + src_files + [dst])
-
-
-def adb_push(dst, files):
-    for f in files:
-        sh_checked(["adb", "push", f, dst])
-
-
-def adb_shell(args):
-    return sh_checked(["adb", "shell"] + args)
 
 
 def check_swift_home():
