@@ -50,6 +50,23 @@ def _resolve_packages():
     sh_checked(['swift', 'package', 'resolve'])
 
 
+# Kostyl. JSON should not be miixed with package resolution output.
+def _filter_json(json_string):
+    json_lines = json_string.split("\n")
+    json_lines_filtered = []
+
+    for line in json_lines:
+        if line.startswith("Updating"):
+            continue
+
+        if len(line) == 0:
+            continue
+
+        json_lines_filtered.append(line)
+
+    return "\n".join(json_lines_filtered)
+
+
 @memoized
 def _get_packages_tree():
     _resolve_packages()
@@ -58,7 +75,14 @@ def _get_packages_tree():
         "swift", "package", "show-dependencies", "--format", "json"
     ])
 
-    return json.loads(json_output)
+    json_output = _filter_json(json_output)
+
+    try:
+        return json.loads(json_output)
+    except:
+        print("Bad json:")
+        print(json_output)
+        raise
 
 
 @memoized
