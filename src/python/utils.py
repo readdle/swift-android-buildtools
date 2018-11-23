@@ -75,6 +75,9 @@ def _get_packages_tree():
         "swift", "package", "show-dependencies", "--format", "json"
     ])
 
+    if sys.version_info.major >= 3:
+        json_output = json_output.decode()
+
     json_output = _filter_json(json_output)
 
     try:
