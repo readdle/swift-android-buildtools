@@ -3,16 +3,18 @@
 from utils import *
 
 
-def copy_prebuilt(src, dst):
-    copytree(os.path.join(src, "libs", BuildConfig.abi(), "*"), dst)
-    copytree(os.path.join(src, "include", "*"), dst)
+def copy_prebuilt(src, libs_dir, include_dir):
+    copytree(os.path.join(src, "libs", BuildConfig.abi(), "*"), libs_dir)
+    copytree(os.path.join(src, "include", "*"), include_dir)
 
 
 def copy_prebuilt_task(module, name):
-    dst = Dirs.build_dir()
+    libs_dir = Dirs.external_libs_dir()
+    include_dir = Dirs.external_include_dir()
     
-    mkdirs(dst)
-    copy_prebuilt(module, dst)
+    mkdirs(libs_dir)
+    mkdirs(include_dir)
+    copy_prebuilt(module, libs_dir, include_dir)
 
 
 def run():
