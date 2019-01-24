@@ -206,8 +206,8 @@ class TestingApp(object):
 class ADB(object):
     @classmethod
     def push(cls, dst, files):
-        for f in files:
-            sh_checked(["adb", "push", f, dst])
+        if isinstance(files, list) and len(files) != 0:
+            sh_checked(["adb", "push", "--sync"] + files + [dst])
 
     @classmethod
     def shell(cls, args):
@@ -223,6 +223,7 @@ class ADB(object):
     @classmethod
     def makedirs(cls, dir):
         cls.shell(["mkdir", "-p", dir])
+        cls.shell(["chmod", "777", dir])
 
 
 def traverse_dependencies(func, include_root=False):
