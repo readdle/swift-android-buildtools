@@ -238,7 +238,7 @@ def copytree(src, dst):
     if len(src_files) == 0:
         return
 
-    subprocess.call(["rsync", "-r"] + src_files + [dst])
+    subprocess.call(["rsync", "-a"] + src_files + [dst])
 
 
 def check_swift_home():
