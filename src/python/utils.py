@@ -133,12 +133,32 @@ class BuildConfig(object):
     @classmethod
     @memoized
     def triple(cls):
-        return "armv7-unknown-linux-androideabi"
+        if os.environ.get("SWIFT_ANDROID_ARCH") == "x86_64":
+            return "x86_64-none-linux-android"
+        elif os.environ.get("SWIFT_ANDROID_ARCH") == "armv7":
+            return "armv7-unknown-linux-androideabi"
+        else:
+            return "aarch64-none-linux-android"
 
     @classmethod
     @memoized
     def abi(cls):
-        return "armeabi-v7a"
+        if os.environ.get("SWIFT_ANDROID_ARCH") == "x86_64":
+            return "x86_64"
+        elif os.environ.get("SWIFT_ANDROID_ARCH") == "armv7":
+            return "armeabi-v7a"
+        else:
+            return "arm64-v8a"
+
+    @classmethod
+    @memoized
+    def swift_abi(cls):
+        if os.environ.get("SWIFT_ANDROID_ARCH") == "x86_64":
+            return "x86_64"
+        elif os.environ.get("SWIFT_ANDROID_ARCH") == "armv7":
+            return "armv7"
+        else:
+            return "aarch64"
 
     @classmethod
     def configuration(cls):
@@ -207,7 +227,7 @@ class ADB(object):
     @classmethod
     def push(cls, dst, files):
         if isinstance(files, list) and len(files) != 0:
-            sh_checked(["adb", "push", "--sync"] + files + [dst])
+            sh_checked(["adb", "push"] + files + [dst])
 
     @classmethod
     def shell(cls, args):

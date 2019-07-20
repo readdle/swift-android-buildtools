@@ -18,7 +18,7 @@ def push(dst, name, skip_push_stdlib, skip_push_external, skip_push_resources):
         copy_resources()
 
     if not skip_push_stdlib:
-        ADB.push(dst, glob(join(SWIFT_ANDROID_HOME, "toolchain/usr/lib/swift/android", "*.so")))
+        ADB.push(dst, glob(join(SWIFT_ANDROID_HOME, "toolchain/usr/lib/swift/android", BuildConfig.swift_abi(), "*.so")))
 
     if not skip_push_external:
         ADB.push(dst, glob(join(Dirs.external_libs_dir(), "*.so")))
@@ -32,8 +32,6 @@ def exec_tests(folder, name, args):
     test_path = folder + "/" + name
 
     ADB.shell([ld_path, test_path] + args)
-
-
 
 
 def run(args):
