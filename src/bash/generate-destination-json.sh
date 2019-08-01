@@ -26,8 +26,8 @@ cat <<JSON
         "-fPIC",
         "-fblocks",
         "--sysroot", "$ANDROID_NDK_HOME/sysroot",
-        "-isystem",  "$ANDROID_NDK_HOME/sysroot/usr/include/$TRIPLE",
-        "-I$ANDROID_NDK_HOME/sources/cxx-stl/llvm-libc++/include",
+        "-isystem", "$ANDROID_NDK_HOME/sysroot/usr/include/$TRIPLE",
+        "-cxx-isystem", "$ANDROID_NDK_HOME/sources/cxx-stl/llvm-libc++/include",
         "-I$SWIFT_ANDROID_HOME/toolchain/usr/lib/swift"
     ],
     "extra-cpp-flags": [
