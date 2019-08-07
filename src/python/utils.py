@@ -217,7 +217,9 @@ class TestingApp(object):
 
     @classmethod
     def get_folder(cls, name):
-        return "/data/local/tmp/" + name.split(".")[0]
+        name = name.split(".")[0]
+        abi = BuildConfig.swift_abi()
+        return "/data/local/tmp/{}-{}".format(name, abi)
 
     @classmethod
     def get_app_folder(cls):
@@ -227,7 +229,7 @@ class ADB(object):
     @classmethod
     def push(cls, dst, files):
         if isinstance(files, list) and len(files) != 0:
-            sh_checked(["adb", "push"] + files + [dst])
+            sh_checked(["adb", "push", "--sync"] + files + [dst])
 
     @classmethod
     def shell(cls, args):
