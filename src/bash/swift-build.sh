@@ -18,6 +18,13 @@ then
     export ARCH=x86_64
     export ABI=x86_64
     export TOOLCHAIN_ROOT=x86_64
+elif [ "$SWIFT_ANDROID_ARCH" == "x86" ]
+then
+    export TARGET=i686-none-linux-android
+    export TRIPLE=i686-linux-android
+    export ARCH=x86
+    export ABI=x86
+    export TOOLCHAIN_ROOT=x86
 elif [ "$SWIFT_ANDROID_ARCH" == "armv7" ]
 then
     export TARGET=armv7-unknown-linux-androideabi

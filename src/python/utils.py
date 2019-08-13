@@ -135,6 +135,8 @@ class BuildConfig(object):
     def triple(cls):
         if os.environ.get("SWIFT_ANDROID_ARCH") == "x86_64":
             return "x86_64-none-linux-android"
+        elif os.environ.get("SWIFT_ANDROID_ARCH") == "x86":
+            return "i686-none-linux-android"
         elif os.environ.get("SWIFT_ANDROID_ARCH") == "armv7":
             return "armv7-unknown-linux-androideabi"
         else:
@@ -145,6 +147,8 @@ class BuildConfig(object):
     def abi(cls):
         if os.environ.get("SWIFT_ANDROID_ARCH") == "x86_64":
             return "x86_64"
+        elif os.environ.get("SWIFT_ANDROID_ARCH") == "x86":
+            return "x86"
         elif os.environ.get("SWIFT_ANDROID_ARCH") == "armv7":
             return "armeabi-v7a"
         else:
@@ -155,6 +159,8 @@ class BuildConfig(object):
     def swift_abi(cls):
         if os.environ.get("SWIFT_ANDROID_ARCH") == "x86_64":
             return "x86_64"
+        elif os.environ.get("SWIFT_ANDROID_ARCH") == "x86":
+            return "i686"
         elif os.environ.get("SWIFT_ANDROID_ARCH") == "armv7":
             return "armv7"
         else:
