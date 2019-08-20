@@ -17,16 +17,16 @@ cat <<JSON
         "-use-ld=gold", 
         "-Xfrontend", "-experimental-disable-objc-attr",
         "-tools-directory", "$EXTERNAL_TOOLCHAIN/$TRIPLE/bin",
-        "-I$ANDROID_NDK_HOME/sysroot/usr/include",
-        "-I$ANDROID_NDK_HOME/sysroot/usr/include/$TRIPLE",
+        "-I$SWIFT_ANDROID_HOME/toolchain/ndk-android-21/usr/include",
+        "-I$SWIFT_ANDROID_HOME/toolchain/ndk-android-21/usr/include/$TRIPLE",
         "-L$EXTERNAL_TOOLCHAIN/lib/gcc/$TRIPLE/4.9.x",
         "-L$ANDROID_NDK_HOME/sources/cxx-stl/llvm-libc++/libs/$ABI"
     ],
     "extra-cc-flags": [
         "-fPIC",
         "-fblocks",
-        "--sysroot", "$ANDROID_NDK_HOME/sysroot",
-        "-isystem", "$ANDROID_NDK_HOME/sysroot/usr/include/$TRIPLE",
+        "--sysroot",    "$SWIFT_ANDROID_HOME/toolchain/ndk-android-21",
+        "-isystem",     "$SWIFT_ANDROID_HOME/toolchain/ndk-android-21/usr/include/$TRIPLE",
         "-cxx-isystem", "$ANDROID_NDK_HOME/sources/cxx-stl/llvm-libc++/include",
         "-I$SWIFT_ANDROID_HOME/toolchain/usr/lib/swift"
     ],
