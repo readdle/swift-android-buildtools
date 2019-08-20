@@ -133,38 +133,51 @@ class BuildConfig(object):
     @classmethod
     @memoized
     def triple(cls):
-        if os.environ.get("SWIFT_ANDROID_ARCH") == "x86_64":
-            return "x86_64-none-linux-android"
-        elif os.environ.get("SWIFT_ANDROID_ARCH") == "x86":
-            return "i686-none-linux-android"
-        elif os.environ.get("SWIFT_ANDROID_ARCH") == "armv7":
-            return "armv7-unknown-linux-androideabi"
-        else:
+        arch = os.environ.get("SWIFT_ANDROID_ARCH")
+
+        if arch == "aarch64" or arch is None:
             return "aarch64-none-linux-android"
+        if arch == "x86_64":
+            return "x86_64-none-linux-android"
+        elif arch == "armv7":
+            return "armv7-unknown-linux-androideabi"
+        elif arch == "x86":
+            return "i686-none-linux-android"
+        else:
+            raise Exception("Unknown arch '{}'".format(arch))
 
     @classmethod
     @memoized
     def abi(cls):
-        if os.environ.get("SWIFT_ANDROID_ARCH") == "x86_64":
-            return "x86_64"
-        elif os.environ.get("SWIFT_ANDROID_ARCH") == "x86":
-            return "x86"
-        elif os.environ.get("SWIFT_ANDROID_ARCH") == "armv7":
-            return "armeabi-v7a"
-        else:
+        arch = os.environ.get("SWIFT_ANDROID_ARCH")
+
+        if arch == "aarch64" or arch is None:
             return "arm64-v8a"
+        elif arch == "x86_64":
+            return "x86_64"
+        elif arch == "armv7":
+            return "armeabi-v7a"
+        elif arch == "x86":
+            return "x86"
+        else:
+            raise Exception("Unknown arch '{}'".format(arch))
 
     @classmethod
     @memoized
     def swift_abi(cls):
-        if os.environ.get("SWIFT_ANDROID_ARCH") == "x86_64":
-            return "x86_64"
-        elif os.environ.get("SWIFT_ANDROID_ARCH") == "x86":
-            return "i686"
-        elif os.environ.get("SWIFT_ANDROID_ARCH") == "armv7":
-            return "armv7"
-        else:
+        arch = os.environ.get("SWIFT_ANDROID_ARCH")
+
+        if arch == "aarch64" or arch is None:
             return "aarch64"
+        elif arch == "x86_64":
+            return "x86_64"
+        elif arch == "armv7":
+            return "armv7"
+        elif arch == "x86":
+            return "i686"
+        else:
+            raise Exception("Unknown arch '{}'".format(arch))
+
 
     @classmethod
     def configuration(cls):
