@@ -32,7 +32,7 @@ then
     export ARCH=arm
     export ABI=armeabi-v7a
     export TOOLCHAIN_ROOT=arm-linux-androideabi
-elif [ "$SWIFT_ANDROID_ARCH" == "x86" ]
+elif [ "$SWIFT_ANDROID_ARCH" == "i686" ]
 then
     export TARGET=i686-none-linux-android
     export TRIPLE=i686-linux-android

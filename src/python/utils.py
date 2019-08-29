@@ -141,7 +141,7 @@ class BuildConfig(object):
             return "x86_64-none-linux-android"
         elif arch == "armv7":
             return "armv7-unknown-linux-androideabi"
-        elif arch == "x86":
+        elif arch == "i686":
             return "i686-none-linux-android"
         else:
             raise Exception("Unknown arch '{}'".format(arch))
@@ -157,7 +157,7 @@ class BuildConfig(object):
             return "x86_64"
         elif arch == "armv7":
             return "armeabi-v7a"
-        elif arch == "x86":
+        elif arch == "i686":
             return "x86"
         else:
             raise Exception("Unknown arch '{}'".format(arch))
@@ -173,7 +173,7 @@ class BuildConfig(object):
             return "x86_64"
         elif arch == "armv7":
             return "armv7"
-        elif arch == "x86":
+        elif arch == "i686":
             return "i686"
         else:
             raise Exception("Unknown arch '{}'".format(arch))
@@ -246,12 +246,12 @@ class TestingApp(object):
 
 class ADB(object):
     @classmethod
-    def push(cls, dst, files):
+    def push(cls, dst, files, device=None):
         if isinstance(files, list) and len(files) != 0:
-            sh_checked(["adb", "push", "--sync"] + files + [dst])
+            sh_checked(cls._base_args(device) + ["push", "--sync"] + files + [dst])
 
     @classmethod
-    def shell(cls, args):
+    def shell(cls, args, device=None):
         env = []
 
         for key, value in os.environ.iteritems():
@@ -259,12 +259,23 @@ class ADB(object):
                 name = key[len("X_ANDROID_"):]
                 env.append(name + "=" + value)
 
-        sh_checked(["adb", "shell"] + env + args)
+        sh_checked(cls._base_args(device) + ["shell"] + env + args)
 
     @classmethod
-    def makedirs(cls, dir):
-        cls.shell(["mkdir", "-p", dir])
-        cls.shell(["chmod", "777", dir])
+    def makedirs(cls, dir, device=None):
+        cls.shell(["mkdir", "-p", dir], device)
+        cls.shell(["chmod", "777", dir], device)
+
+    @classmethod
+    def _base_args(cls, device):
+        return ["adb"] + cls._device_args(device)
+
+    @classmethod
+    def _device_args(cls, device):
+        if device is None:
+            return []
+        else:
+            return ["-s", device]
 
 
 def traverse_dependencies(func, include_root=False):

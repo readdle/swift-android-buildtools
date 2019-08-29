@@ -8,30 +8,30 @@ self_dir = os.path.dirname(__file__)
 swift_build = os.path.join(self_dir, "swift-build")
 
 
-def push(dst, name, skip_push_stdlib, skip_push_external, skip_push_resources):
+def push(dst, name, skip_push_stdlib, skip_push_external, skip_push_resources, device=None):
     from os.path import join
     from glob import glob
 
-    ADB.makedirs(dst)
+    ADB.makedirs(dst, device)
 
     if not skip_push_resources:
-        copy_resources()
+        copy_resources(device)
 
     if not skip_push_stdlib:
-        ADB.push(dst, glob(join(SWIFT_ANDROID_HOME, "toolchain/usr/lib/swift/android", BuildConfig.swift_abi(), "*.so")))
+        ADB.push(dst, glob(join(SWIFT_ANDROID_HOME, "toolchain/usr/lib/swift/android", BuildConfig.swift_abi(), "*.so")), device)
 
     if not skip_push_external:
-        ADB.push(dst, glob(join(Dirs.external_libs_dir(), "*.so")))
+        ADB.push(dst, glob(join(Dirs.external_libs_dir(), "*.so")), device)
 
-    ADB.push(dst, glob(join(Dirs.build_dir(), "*.so")))
-    ADB.push(dst, [join(Dirs.build_dir(), name)])
+    ADB.push(dst, glob(join(Dirs.build_dir(), "*.so")), device)
+    ADB.push(dst, [join(Dirs.build_dir(), name)], device)
 
 
-def exec_tests(folder, name, args):
+def exec_tests(folder, name, args, device=None):
     ld_path = "LD_LIBRARY_PATH=" + folder
     test_path = folder + "/" + name
 
-    ADB.shell([ld_path, test_path] + args)
+    ADB.shell([ld_path, test_path] + args, device)
 
 
 def run(args):
@@ -52,16 +52,24 @@ def run(args):
     folder = TestingApp.get_folder(name)
 
     if not skip_push:
-        push(folder, name, skip_push_stdlib, skip_push_external, skip_push_resources)
+        push(folder, name, skip_push_stdlib, skip_push_external, skip_push_resources, args.device)
 
     if not skip_testing:
-        exec_tests(folder, name, args.test_args)
+        exec_tests(folder, name, args.test_args, args.device)
 
 
 def main():
     from arg_parser_ext import ArgumentParserOpt
 
     parser = ArgumentParserOpt(description="Build and run swift tests on Android")
+
+    parser.add_argument(
+        "-s", "--serial", "--device",
+        dest="device",
+        action="store",
+        default=None,
+        help="use device with given serial (overrides $ANDROID_SERIAL)"
+    )
 
     parser.add_argument(
         "-f", "--fast", "--just-run",

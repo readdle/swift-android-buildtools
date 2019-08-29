@@ -133,7 +133,7 @@ def get_all_files_rec(srcs):
     return res
 
 
-def copy_resources():
+def copy_resources(device=None):
     """
     Copying resources to Android device by using `adb_push`
 
@@ -156,8 +156,8 @@ def copy_resources():
     dst = path.join(TestingApp.get_app_folder(), "resources")
 
     # Clean
-    ADB.shell(["rm", "-rf", dst])
-    ADB.makedirs(dst)
+    ADB.shell(["rm", "-rf", dst], device)
+    ADB.makedirs(dst, device)
 
     print("Copying resources...")
 
@@ -166,5 +166,5 @@ def copy_resources():
         commands = CopyCommand.load_commands(line)
         for command in commands:
             dst_path = path.normpath(path.join(dst, command.into_folder))
-            ADB.makedirs(dst_path)
-            ADB.push(dst_path, command.from_folder)
+            ADB.makedirs(dst_path, device)
+            ADB.push(dst_path, command.from_folder, device)
