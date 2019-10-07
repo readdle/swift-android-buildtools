@@ -8,6 +8,10 @@ SELF_DIR=$SELF_DIR/src/bash
 xcode_toolchain=$(dirname $(dirname $(dirname $(xcrun --find swift))))
 
 export CC="$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/darwin-x86_64/bin/clang"
+export CXX="$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/darwin-x86_64/bin/clang++"
+
+# swiftc dont know about CC/CXX so tell correct compiler path for him in more brutal way
+export PATH="$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/darwin-x86_64/bin:$PATH"
 
 export SWIFT_EXEC=$SWIFT_ANDROID_HOME/toolchain/usr/bin/swiftc
 export SWIFT_EXEC_MANIFEST=$xcode_toolchain/usr/bin/swiftc
