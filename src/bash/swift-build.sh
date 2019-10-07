@@ -5,11 +5,13 @@
 SELF_DIR=$(dirname $0)
 SELF_DIR=$SELF_DIR/src/bash
 
-XCODE_SWIFTC=$(xcrun --find swiftc)
+xcode_toolchain=$(dirname $(dirname $(dirname $(xcrun --find swift))))
 
 export CC="$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/darwin-x86_64/bin/clang"
+
 export SWIFT_EXEC=$SWIFT_ANDROID_HOME/toolchain/usr/bin/swiftc
-export SWIFT_EXEC_MANIFEST=$XCODE_SWIFTC
+export SWIFT_EXEC_MANIFEST=$xcode_toolchain/usr/bin/swiftc
+export SWIFTPM_PD_LIBS=$xcode_toolchain/usr/lib/swift/pm
 
 if [ ! -n "${SWIFT_ANDROID_ARCH+defined}" ] || [ "$SWIFT_ANDROID_ARCH" == "aarch64" ]
 then
