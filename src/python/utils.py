@@ -248,7 +248,7 @@ class ADB(object):
     @classmethod
     def push(cls, dst, files, device=None):
         if isinstance(files, list) and len(files) != 0:
-            sh_checked(cls._base_args(device) + ["push", "--sync"] + files + [dst])
+            sh_checked(cls._base_args(device) + ["push"] + files + [dst])
 
     @classmethod
     def shell(cls, args, device=None):
