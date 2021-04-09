@@ -19,6 +19,7 @@ export SWIFTPM_PD_LIBS=$xcode_toolchain/usr/lib/swift/pm
 
 if [ ! -n "${SWIFT_ANDROID_ARCH+defined}" ] || [ "$SWIFT_ANDROID_ARCH" == "aarch64" ]
 then
+    export SWIFT_ANDROID_ARCH=aarch64
     export TARGET=aarch64-none-linux-android
     export TRIPLE=aarch64-linux-android
     export ARCH=arm64
@@ -26,6 +27,7 @@ then
     export TOOLCHAIN_ROOT=aarch64-linux-android
 elif [ "$SWIFT_ANDROID_ARCH" == "x86_64" ]
 then
+    export SWIFT_ANDROID_ARCH=x86_64
     export TARGET=x86_64-none-linux-android
     export TRIPLE=x86_64-linux-android
     export ARCH=x86_64
@@ -33,6 +35,7 @@ then
     export TOOLCHAIN_ROOT=x86_64
 elif [ "$SWIFT_ANDROID_ARCH" == "armv7" ]
 then
+    export SWIFT_ANDROID_ARCH=armv7
     export TARGET=armv7-unknown-linux-androideabi
     export TRIPLE=arm-linux-androideabi
     export ARCH=arm
@@ -40,6 +43,7 @@ then
     export TOOLCHAIN_ROOT=arm-linux-androideabi
 elif [ "$SWIFT_ANDROID_ARCH" == "i686" ]
 then
+    export SWIFT_ANDROID_ARCH=i686
     export TARGET=i686-none-linux-android
     export TRIPLE=i686-linux-android
     export ARCH=x86

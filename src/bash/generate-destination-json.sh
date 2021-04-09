@@ -16,6 +16,7 @@ cat <<JSON
     "extra-swiftc-flags": [
         "-use-ld=gold", 
         "-Xfrontend", "-experimental-disable-objc-attr",
+        "-resource-dir", "$SWIFT_ANDROID_HOME/toolchain/usr/lib/swift-$SWIFT-ARCH",
         "-tools-directory", "$EXTERNAL_TOOLCHAIN/$TRIPLE/bin",
         "-I$SWIFT_ANDROID_HOME/toolchain/ndk-android-21/usr/include",
         "-I$SWIFT_ANDROID_HOME/toolchain/ndk-android-21/usr/include/$TRIPLE",
@@ -28,7 +29,7 @@ cat <<JSON
         "--sysroot",    "$SWIFT_ANDROID_HOME/toolchain/ndk-android-21",
         "-isystem",     "$SWIFT_ANDROID_HOME/toolchain/ndk-android-21/usr/include/$TRIPLE",
         "-cxx-isystem", "$ANDROID_NDK_HOME/sources/cxx-stl/llvm-libc++/include",
-        "-I$SWIFT_ANDROID_HOME/toolchain/usr/lib/swift"
+        "-I$SWIFT_ANDROID_HOME/toolchain/usr/lib/swift-$SWIFT_ANDROID_ARCH"
     ],
     "extra-cpp-flags": [
         "-lc++_shared"
