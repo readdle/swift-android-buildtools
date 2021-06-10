@@ -136,13 +136,13 @@ class BuildConfig(object):
         arch = os.environ.get("SWIFT_ANDROID_ARCH")
 
         if arch == "aarch64" or arch is None:
-            return "aarch64-none-linux-android"
+            return "aarch64-unknown-linux-android"
         if arch == "x86_64":
-            return "x86_64-none-linux-android"
+            return "x86_64-unknown-linux-android"
         elif arch == "armv7":
             return "armv7-unknown-linux-androideabi"
         elif arch == "i686":
-            return "i686-none-linux-android"
+            return "i686-unknown-linux-android"
         else:
             raise Exception("Unknown arch '{}'".format(arch))
 
