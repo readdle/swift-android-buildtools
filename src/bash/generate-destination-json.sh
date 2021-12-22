@@ -3,6 +3,7 @@
 : "${ANDROID_NDK_HOME:?$ANDROID_NDK_HOME should be set}"
 
 EXTERNAL_TOOLCHAIN="$ANDROID_NDK_HOME/toolchains/$TOOLCHAIN_ROOT-4.9/prebuilt/darwin-x86_64"
+ANDROID_API_LEVEL="${SWIFT_ANDROID_API_LEVEL:=23}"
 
 cat <<JSON
 {
@@ -10,7 +11,7 @@ cat <<JSON
     "dynamic-library-extension": "so",
 
     "target": "$TARGET",
-    "sdk": "$ANDROID_NDK_HOME/platforms/android-23/arch-$ARCH",
+    "sdk": "$ANDROID_NDK_HOME/platforms/android-$ANDROID_API_LEVEL/arch-$ARCH",
     "toolchain-bin-dir": "$SWIFT_ANDROID_HOME/toolchain/usr/bin",
 
     "extra-swiftc-flags": [
