@@ -47,7 +47,7 @@ def mkdirs(path):
 
 @memoized
 def _resolve_packages():
-    sh_checked(['swift', 'package', 'resolve'])
+    sh_checked(['swift', 'package', 'resolve'], env= { "BUILD_ANDROID": "1" })
 
 
 # Kostyl. JSON should not be miixed with package resolution output.
@@ -71,9 +71,12 @@ def _filter_json(json_string):
 def _get_packages_tree():
     _resolve_packages()
 
+    os_env = os.environ.copy()
+    os_env["BUILD_ANDROID"] = "1"
+
     json_output = subprocess.check_output([
         "swift", "package", "show-dependencies", "--format", "json"
-    ])
+    ], env = os_env)
 
     if sys.version_info.major >= 3:
         json_output = json_output.decode()
@@ -92,9 +95,12 @@ def _get_packages_tree():
 def get_package_description():
     _resolve_packages()
 
+    os_env = os.environ.copy()
+    os_env["BUILD_ANDROID"] = "1"
+
     json_output = subprocess.check_output([
         "swift", "package", "dump-package"
-    ])
+    ], env=os_env)
 
     return json.loads(json_output)
 
