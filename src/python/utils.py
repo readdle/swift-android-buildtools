@@ -1,4 +1,3 @@
-from __future__ import print_function
 
 import json
 import os
@@ -140,15 +139,16 @@ class BuildConfig(object):
     @memoized
     def triple(cls):
         arch = os.environ.get("SWIFT_ANDROID_ARCH")
+        level = os.environ.get("SWIFT_ANDROID_API_LEVEL")
 
         if arch == "aarch64" or arch is None:
-            return "aarch64-unknown-linux-android"
+            return "aarch64-unknown-linux-android29"
         if arch == "x86_64":
-            return "x86_64-unknown-linux-android"
+            return "x86_64-unknown-linux-android29"
         elif arch == "armv7":
-            return "armv7-unknown-linux-androideabi"
+            return "armv7-unknown-linux-androideabi29"
         elif arch == "i686":
-            return "i686-unknown-linux-android"
+            return "i686-unknown-linux-android29"
         else:
             raise Exception("Unknown arch '{}'".format(arch))
 
@@ -260,7 +260,7 @@ class ADB(object):
     def shell(cls, args, device=None):
         env = []
 
-        for key, value in os.environ.iteritems():
+        for key, value in os.environ.items():
             if key.startswith("X_ANDROID"):
                 name = key[len("X_ANDROID_"):]
                 env.append(name + "=" + value)
@@ -303,3 +303,4 @@ def check_swift_home():
     if SWIFT_ANDROID_HOME is None or not os.path.isdir(SWIFT_ANDROID_HOME):
         print("SWIFT_ANDROID_HOME not set execution stopped")
         sys.exit(127)
+

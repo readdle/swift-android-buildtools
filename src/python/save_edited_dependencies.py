@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from __future__ import print_function
+
 
 from utils import *
 import json
@@ -94,7 +94,7 @@ def process_pins(pins, edited):
     for dependency in edited:
         edited_names.add(dependency.name)
 
-    pins = list(filter(lambda pin: pin["package"] not in edited_names, pins))
+    pins = list([pin for pin in pins if pin["package"] not in edited_names])
 
     for dependency in edited:
         pins.append(dependency.to_pin())
@@ -117,3 +117,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

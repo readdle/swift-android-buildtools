@@ -16,7 +16,7 @@ class CopyCommand(object):
         def wrap(prop):
             if prop is None:
                 return []
-            elif isinstance(prop, (str, unicode)):
+            elif isinstance(prop, str):
                 return [prop]
             elif isinstance(prop, (list, tuple)):
                 return prop
@@ -30,7 +30,7 @@ class CopyCommand(object):
         includes = get_or_default(line, 'include', None)
 
         if includes is not None and get_or_default(line, "into", None) is None:
-            print("You need to pass `into` if you pass `include` line %s" % json.dumps(line))
+            print(("You need to pass `into` if you pass `include` line %s" % json.dumps(line)))
             exit(1)
 
         from_ = get_or_default(line, 'from', line)
@@ -79,11 +79,11 @@ class CopyCommand(object):
                             subpath = is_subpath(p, path.join(FROM_PATH, excl))
 
                             if subpath:
-                                print "Excluding resource { %s }" % p
+                                print("Excluding resource { %s }" % p)
                                 return False
                             return True
 
-                        command.from_folder = filter(filter_path, command.from_folder)
+                        command.from_folder = list(filter(filter_path, command.from_folder))
 
                     if from_folder_len == len(command.from_folder) and copy['into'] != '.':  # Excluding file not here
                         command.from_folder = [path.join(copy['base'], copy['into'])]  # merge it back
@@ -151,7 +151,7 @@ def copy_resources(device=None):
     if not os.path.exists(copy_resources_filepath):
         return
     else:
-        print("Copy resources: %s is found!" % copy_resources_filepath)
+        print(("Copy resources: %s is found!" % copy_resources_filepath))
 
     dst = path.join(TestingApp.get_app_folder(), "resources")
 
@@ -168,3 +168,4 @@ def copy_resources(device=None):
             dst_path = path.normpath(path.join(dst, command.into_folder))
             ADB.makedirs(dst_path, device)
             ADB.push(dst_path, command.from_folder, device)
+
