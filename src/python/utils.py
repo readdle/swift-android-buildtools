@@ -142,13 +142,13 @@ class BuildConfig(object):
         level = os.environ.get("SWIFT_ANDROID_API_LEVEL")
 
         if arch == "aarch64" or arch is None:
-            return "aarch64-unknown-linux-android29"
+            return "aarch64-unknown-linux-android{}".format(level)
         if arch == "x86_64":
-            return "x86_64-unknown-linux-android29"
+            return "x86_64-unknown-linux-android{}".format(level)
         elif arch == "armv7":
-            return "armv7-unknown-linux-androideabi29"
+            return "armv7-unknown-linux-androideabi{}".format(level)
         elif arch == "i686":
-            return "i686-unknown-linux-android29"
+            return "i686-unknown-linux-android{}".format(level)
         else:
             raise Exception("Unknown arch '{}'".format(arch))
 

@@ -8,7 +8,7 @@ SELF_DIR=$SELF_DIR/src/bash
 xcode_toolchain=$(dirname $(dirname $(dirname $(xcrun --find swift))))
 
 export BUILD_ANDROID=1
-ANDROID_API_LEVEL="${SWIFT_ANDROID_API_LEVEL:=29}"
+ANDROID_API_LEVEL="${SWIFT_ANDROID_API_LEVEL:=24}"
 
 export CC="$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/darwin-x86_64/bin/clang"
 export CXX="$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/darwin-x86_64/bin/clang++"
