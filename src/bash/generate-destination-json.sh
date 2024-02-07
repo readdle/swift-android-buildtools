@@ -13,7 +13,9 @@ cat <<JSON > $SELF_DIR/$TARGET.json
     
     "extra-cc-flags": [
         "-fPIC",
-        "-I$SWIFT_ANDROID_HOME/toolchain/usr/lib/swift-$SWIFT_ANDROID_ARCH"
+        "-I$SWIFT_ANDROID_HOME/toolchain/usr/lib/swift-$SWIFT_ANDROID_ARCH",
+        "-I$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/include",
+        "-I$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/include/$TRIPLE"
     ],
     "extra-swiftc-flags": [
         "-Xfrontend", "-experimental-disable-objc-attr",
