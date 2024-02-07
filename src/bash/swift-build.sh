@@ -52,7 +52,7 @@ fi
 include=-I.build/jniLibs/include
 libs=-L.build/jniLibs/$ABI
 
-flags="-Xcc $include -Xswiftc $include -Xswiftc $libs"
+flags="-Xcc $include -Xswiftc $include -Xswiftc $libs -Xmanifest -DTARGET_ANDROID"
 
 $SELF_DIR/generate-destination-json.sh
 $SWIFT_ANDROID_HOME/toolchain/usr/bin/swift-build --destination=$SELF_DIR/$TARGET.json $flags "$@"
