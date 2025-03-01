@@ -139,7 +139,7 @@ class BuildConfig(object):
     @memoized
     def triple(cls):
         arch = os.environ.get("SWIFT_ANDROID_ARCH")
-        level = os.environ.get("SWIFT_ANDROID_API_LEVEL")
+        level = os.environ.get("SWIFT_ANDROID_API_LEVEL", "24")
 
         if arch == "aarch64" or arch is None:
             return "aarch64-unknown-linux-android{}".format(level)

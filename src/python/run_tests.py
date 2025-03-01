@@ -5,7 +5,7 @@ from resources import copy_resources
 
 
 self_dir = os.path.dirname(__file__)
-swift_build = os.path.join(self_dir, "swift-build")
+swift_build = os.path.join(self_dir, "swift-android-build")
 
 
 def push(dst, name, skip_push_stdlib, skip_push_external, skip_push_resources, device=None):

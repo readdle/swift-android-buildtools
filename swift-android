@@ -1,0 +1,18 @@
+#!/bin/bash
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SCRIPT_NAME="swift-android-$1"
+
+if [[ -z "$1" ]]; then
+  echo "Usage: swift-android <command>"
+  exit 1
+fi
+
+EXECUTABLE="$SCRIPT_DIR/$SCRIPT_NAME"
+
+if [[ -x "$EXECUTABLE" ]]; then
+  exec "$EXECUTABLE" "${@:2}"
+else
+  echo "Error: Command '$SCRIPT_NAME' not found in '$SCRIPT_DIR' or not executable."
+  exit 1
+fi

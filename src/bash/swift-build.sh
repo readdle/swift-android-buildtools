@@ -5,20 +5,19 @@
 SELF_DIR=$(dirname $0)
 SELF_DIR=$SELF_DIR/src/bash
 
-xcode_toolchain=$(dirname $(dirname $(dirname $(xcrun --find swift))))
+XCODE_TOOLCHAIN=/Library/Developer/Toolchains/swift-6.0.3-RELEASE.xctoolchain
+
+if [ ! -d "$XCODE_TOOLCHAIN" ]; then
+    echo "Toolchain not found at $XCODE_TOOLCHAIN"
+    echo "Please install the Swift 6.0.3 toolchain from https://www.swift.org/install/macos"
+    exit 1
+fi
 
 export BUILD_ANDROID=1
 ANDROID_API_LEVEL="${SWIFT_ANDROID_API_LEVEL:=24}"
 
 export CC="$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/darwin-x86_64/bin/clang"
 export CXX="$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/darwin-x86_64/bin/clang++"
-
-# swiftc dont know about CC/CXX so tell correct compiler path for him in more brutal way
-export PATH="$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/darwin-x86_64/bin:$PATH"
-
-export SWIFT_EXEC=$SWIFT_ANDROID_HOME/toolchain/usr/bin/swiftc
-export SWIFT_EXEC_MANIFEST=$xcode_toolchain/usr/bin/swiftc
-export SWIFTPM_CUSTOM_LIBS_DIR=$xcode_toolchain/usr/lib/swift/pm
 
 if [ ! -n "${SWIFT_ANDROID_ARCH+defined}" ] || [ "$SWIFT_ANDROID_ARCH" == "aarch64" ]
 then
@@ -52,9 +51,9 @@ fi
 include=-I.build/jniLibs/include
 libs=-L.build/jniLibs/$ABI
 
-flags="-Xcc $include -Xswiftc $include -Xswiftc $libs -Xmanifest -DTARGET_ANDROID"
+flags="-Xcc $include -Xswiftc $include -Xswiftc $libs -Xbuild-tools-swiftc -DTARGET_ANDROID"
 
 $SELF_DIR/generate-destination-json.sh
-$SWIFT_ANDROID_HOME/toolchain/usr/bin/swift-build --destination=$SELF_DIR/$TARGET.json $flags "$@"
+$XCODE_TOOLCHAIN/usr/bin/swift-build --destination=$SELF_DIR/$TARGET.json $flags "$@"
 
 exit $?

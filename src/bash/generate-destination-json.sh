@@ -18,7 +18,7 @@ cat <<JSON > $SELF_DIR/$TARGET.json
         "-I$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/include/$TRIPLE"
     ],
     "extra-swiftc-flags": [
-        "-Xfrontend", "-experimental-disable-objc-attr",
+        "-use-ld=lld",
         "-resource-dir", "$SWIFT_ANDROID_HOME/toolchain/usr/lib/swift-$SWIFT_ANDROID_ARCH",
         "-tools-directory", "$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/darwin-x86_64/bin",
         "-I$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/include",
