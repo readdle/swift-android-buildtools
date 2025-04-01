@@ -43,12 +43,6 @@ def mkdirs(path):
     if not os.path.exists(path):
         os.makedirs(path)
 
-
-@memoized
-def _resolve_packages():
-    sh_checked(['swift', 'package', 'resolve'], env= { "BUILD_ANDROID": "1" })
-
-
 # Kostyl. JSON should not be miixed with package resolution output.
 def _filter_json(json_string):
     json_lines = json_string.split("\n")
@@ -68,13 +62,11 @@ def _filter_json(json_string):
 
 @memoized
 def _get_packages_tree():
-    _resolve_packages()
-
     os_env = os.environ.copy()
     os_env["BUILD_ANDROID"] = "1"
 
     json_output = subprocess.check_output([
-        "swift", "package", "show-dependencies", "--format", "json"
+        "swift", "package", "show-dependencies", "-Xbuild-tools-swiftc", "-DTARGET_ANDROID", "--format", "json"
     ], env = os_env)
 
     if sys.version_info.major >= 3:
@@ -92,38 +84,14 @@ def _get_packages_tree():
 
 @memoized
 def get_package_description():
-    _resolve_packages()
-
     os_env = os.environ.copy()
     os_env["BUILD_ANDROID"] = "1"
 
     json_output = subprocess.check_output([
-        "swift", "package", "dump-package"
+        "swift", "package", "dump-package", "-Xbuild-tools-swiftc", "-DTARGET_ANDROID"
     ], env=os_env)
 
     return json.loads(json_output)
-
-
-def _traverse(root_node, include_root, func):
-    seen = set()
-
-    if not include_root:
-        seen.add(root_node["path"])
-    
-    def inner(node):
-        children = node["dependencies"]
-        path = node["path"]
-        name = node["name"]
-
-        for sub_node in children:
-            inner(sub_node)
-
-        if path not in seen:
-            func(path, name)
-            seen.add(path)
-
-    inner(root_node)
-
 
 class BuildConfig(object):
     __configuration = "debug"
@@ -282,10 +250,6 @@ class ADB(object):
             return []
         else:
             return ["-s", device]
-
-
-def traverse_dependencies(func, include_root=False):
-    _traverse(_get_packages_tree(), include_root, func)
 
 
 def copytree(src, dst):
