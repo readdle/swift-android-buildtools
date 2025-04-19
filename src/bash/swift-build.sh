@@ -14,7 +14,7 @@ if [ ! -d "$XCODE_TOOLCHAIN" ]; then
 fi
 
 export BUILD_ANDROID=1
-ANDROID_API_LEVEL="${SWIFT_ANDROID_API_LEVEL:=24}"
+ANDROID_API_LEVEL="${SWIFT_ANDROID_API_LEVEL:=28}"
 
 export CC="$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/darwin-x86_64/bin/clang"
 export CXX="$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/darwin-x86_64/bin/clang++"
