@@ -5,11 +5,15 @@
 SELF_DIR=$(dirname $0)
 SELF_DIR=$SELF_DIR/src/bash
 
-XCODE_TOOLCHAIN=/Library/Developer/Toolchains/swift-6.0.3-RELEASE.xctoolchain
+XCODE_TOOLCHAIN=~/Library/Developer/Toolchains/swift-6.1-RELEASE.xctoolchain
+
+if [ ! -d "$XCODE_TOOLCHAIN" ]; then
+    XCODE_TOOLCHAIN=/Library/Developer/Toolchains/swift-6.1-RELEASE.xctoolchain
+fi
 
 if [ ! -d "$XCODE_TOOLCHAIN" ]; then
     echo "Toolchain not found at $XCODE_TOOLCHAIN"
-    echo "Please install the Swift 6.0.3 toolchain from https://www.swift.org/install/macos"
+    echo "Please install the Swift 6.1 toolchain from https://www.swift.org/install/macos"
     exit 1
 fi
 
