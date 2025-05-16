@@ -22,7 +22,10 @@ cat <<JSON > $SELF_DIR/$TARGET.json
         "-resource-dir", "$SWIFT_ANDROID_HOME/toolchain/usr/lib/swift",
         "-tools-directory", "$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/darwin-x86_64/bin",
         "-I$SWIFT_ANDROID_HOME/toolchain/usr/include",
-        "-I$SWIFT_ANDROID_HOME/toolchain/usr/include/$TRIPLE"
+        "-I$SWIFT_ANDROID_HOME/toolchain/usr/include/$TRIPLE",
+        "-Xlinker", "--build-id=sha1",
+        "-Xlinker", "-z",
+        "-Xlinker", "max-page-size=16384"
     ],
     "extra-cpp-flags": [
         "-lstdc++"
