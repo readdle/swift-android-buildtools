@@ -1,10 +1,26 @@
-
 import json
 import os
 import subprocess
 import sys
 
 SWIFT_ANDROID_HOME = os.getenv("SWIFT_ANDROID_HOME")
+
+def find_swift_toolchain():
+    # Check common locations for Swift 6.1 toolchain
+    toolchain_paths = [
+        os.path.expanduser("~/Library/Developer/Toolchains/swift-6.1-RELEASE.xctoolchain"),
+        "/Library/Developer/Toolchains/swift-6.1-RELEASE.xctoolchain"
+    ]
+    
+    for path in toolchain_paths:
+        if os.path.isdir(path):
+            return path
+            
+    raise Exception("Swift 6.1 toolchain not found. Please install it from https://www.swift.org/install/macos")
+
+def get_swift_command():
+    toolchain = find_swift_toolchain()
+    return os.path.join(toolchain, "usr/bin/swift")
 
 def memoized(func):
     state = type("State", (object,), {
@@ -66,7 +82,7 @@ def _get_packages_tree():
     os_env["BUILD_ANDROID"] = "1"
 
     json_output = subprocess.check_output([
-        "swift", "package", "show-dependencies", "-Xbuild-tools-swiftc", "-DTARGET_ANDROID", "--format", "json"
+        get_swift_command(), "package", "show-dependencies", "-Xbuild-tools-swiftc", "-DTARGET_ANDROID", "--format", "json"
     ], env = os_env)
 
     if sys.version_info.major >= 3:
@@ -88,7 +104,7 @@ def get_package_description():
     os_env["BUILD_ANDROID"] = "1"
 
     json_output = subprocess.check_output([
-        "swift", "package", "dump-package", "-Xbuild-tools-swiftc", "-DTARGET_ANDROID"
+        get_swift_command(), "package", "dump-package", "-Xbuild-tools-swiftc", "-DTARGET_ANDROID"
     ], env=os_env)
 
     return json.loads(json_output)

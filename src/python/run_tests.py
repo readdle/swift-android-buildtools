@@ -18,7 +18,7 @@ def push(dst, name, skip_push_stdlib, skip_push_external, skip_push_resources, d
         copy_resources(device)
 
     if not skip_push_stdlib:
-        ADB.push(dst, glob(join(SWIFT_ANDROID_HOME, "toolchain/usr/lib/swift-{}/android".format(BuildConfig.swift_abi()), "*.so*")), device)
+        ADB.push(dst, glob(join(SWIFT_ANDROID_HOME, "toolchain/usr/lib/swift/android/{}".format(BuildConfig.swift_abi()), "*.so*")), device)
 
     if not skip_push_external:
         ADB.push(dst, glob(join(Dirs.external_libs_dir(), "*.so")), device)
