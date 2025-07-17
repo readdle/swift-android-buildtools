@@ -121,9 +121,9 @@ class BuildConfig(object):
 
     @classmethod
     @memoized
-    def triple(cls):
+    def target(cls):
         arch = os.environ.get("SWIFT_ANDROID_ARCH")
-        level = os.environ.get("SWIFT_ANDROID_API_LEVEL", "24")
+        level = os.environ.get("SWIFT_ANDROID_API_LEVEL", "29")
 
         if arch == "aarch64" or arch is None:
             return "aarch64-unknown-linux-android{}".format(level)
@@ -133,6 +133,22 @@ class BuildConfig(object):
             return "armv7-unknown-linux-androideabi{}".format(level)
         elif arch == "i686":
             return "i686-unknown-linux-android{}".format(level)
+        else:
+            raise Exception("Unknown arch '{}'".format(arch))
+
+    @classmethod
+    @memoized
+    def tripple(cls):
+        arch = os.environ.get("SWIFT_ANDROID_ARCH")
+
+        if arch == "aarch64" or arch is None:
+            return "aarch64-linux-android"
+        if arch == "x86_64":
+            return "x86_64-linux-android"
+        elif arch == "armv7":
+            return "armv7-linux-androideabi"
+        elif arch == "i686":
+            return "i686-linux-android"
         else:
             raise Exception("Unknown arch '{}'".format(arch))
 
@@ -193,26 +209,17 @@ class Dirs(object):
     @classmethod
     @memoized
     def build_dir(cls):
-        return os.path.join(cls.build_root(), BuildConfig.triple(), BuildConfig.configuration())
-
-    @classmethod
-    def external_build_root(cls, name):
-        return os.path.join(cls.build_root(), "external-build", name)
+        return os.path.join(cls.build_root(), BuildConfig.target(), BuildConfig.configuration())
 
     @classmethod
     @memoized
     def external_out_dir(cls):
-        return os.path.join(cls.build_root(), "jniLibs")
-
-    @classmethod
-    @memoized
-    def external_include_dir(cls):
-        return os.path.join(cls.external_out_dir(), "include")
+        return os.path.join(cls.build_root(), "artifacts/*/*/*")
 
     @classmethod
     @memoized
     def external_libs_dir(cls):
-        return os.path.join(cls.external_out_dir(), BuildConfig.abi())
+        return os.path.join(cls.external_out_dir(), BuildConfig.tripple())
 
 class TestingApp(object):
     @classmethod
