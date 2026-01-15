@@ -65,7 +65,7 @@ def _get_packages_tree():
     os_env["BUILD_ANDROID"] = "1"
 
     json_output = subprocess.check_output([
-        "swiftly", "run", "swift", "package", "show-dependencies", "-Xbuild-tools-swiftc", "-DTARGET_ANDROID", "-Xbuild-tools-swiftc", "-D{}".format(BuildConfig.triple_flag()), "--format", "json"
+        "swiftly", "run", "+6.2", "swift", "package", "show-dependencies", "-Xbuild-tools-swiftc", "-DTARGET_ANDROID", "-Xbuild-tools-swiftc", "-D{}".format(BuildConfig.triple_flag()), "--format", "json"
     ], env = os_env)
 
     if sys.version_info.major >= 3:
@@ -87,7 +87,7 @@ def get_package_description():
     os_env["BUILD_ANDROID"] = "1"
 
     json_output = subprocess.check_output([
-        "swiftly", "run", "swift", "package", "dump-package", "-Xbuild-tools-swiftc", "-DTARGET_ANDROID", "-Xbuild-tools-swiftc", "-D{}".format(BuildConfig.triple_flag())
+        "swiftly", "run", "+6.2", "swift", "package", "dump-package", "-Xbuild-tools-swiftc", "-DTARGET_ANDROID", "-Xbuild-tools-swiftc", "-D{}".format(BuildConfig.triple_flag())
     ], env=os_env)
 
     return json.loads(json_output)

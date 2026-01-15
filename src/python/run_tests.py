@@ -19,6 +19,7 @@ def push(dst, name, skip_push_stdlib, skip_push_external, skip_push_resources, d
 
     if not skip_push_stdlib:
         ADB.push(dst, glob(join(SWIFT_ANDROID_SDK_HOME, "swift-android/swift-resources/usr/lib/swift-{}/android/".format(BuildConfig.swift_abi()), "*.so*")), device)
+        ADB.push(dst, glob(join(SWIFT_ANDROID_SDK_HOME, "swift-android/ndk-sysroot/usr/lib/{}/".format(BuildConfig.tripple()), "libc++_shared.so")), device)
 
     if not skip_push_external:
         ADB.push(dst, glob(join(Dirs.external_libs_dir(), "*.so")), device)
