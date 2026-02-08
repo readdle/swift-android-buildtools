@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 
-from utils import *
+import os, sys
+sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
+
+from utils import BuildConfig, SWIFT_VERSION, sh_checked, check_swift_home
 
 
 def swift_build(extra_args=None):

@@ -98,9 +98,9 @@ The build tool automatically defines these compile-time flags for build tool plu
 | Flag | When Defined |
 |---|---|
 | `TARGET_ANDROID` | Always (every Android build) |
-| `TRIPPLE_AARCH64_LINUX_ANDROID` | `SWIFT_ANDROID_ARCH=aarch64` or unset |
-| `TRIPPLE_X86_64_LINUX_ANDROID` | `SWIFT_ANDROID_ARCH=x86_64` |
-| `TRIPPLE_ARM_LINUX_ANDROID` | `SWIFT_ANDROID_ARCH=armv7` |
+| `TRIPLE_AARCH64_LINUX_ANDROID` | `SWIFT_ANDROID_ARCH=aarch64` or unset |
+| `TRIPLE_X86_64_LINUX_ANDROID` | `SWIFT_ANDROID_ARCH=x86_64` |
+| `TRIPLE_ARM_LINUX_ANDROID` | `SWIFT_ANDROID_ARCH=armv7` |
 These flags are passed via `-Xbuild-tools-swiftc` and are available in your `Package.swift` build tool plugin code.
 
 ### Examples

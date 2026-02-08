@@ -122,7 +122,7 @@ class BuildConfig(object):
 
     @classmethod
     @memoized
-    def tripple(cls):
+    def triple(cls):
         arch = os.environ.get("SWIFT_ANDROID_ARCH")
 
         if arch == "aarch64" or arch is None:
@@ -136,7 +136,7 @@ class BuildConfig(object):
 
     @classmethod
     @memoized
-    def ndk_tripple(cls):
+    def ndk_triple(cls):
         arch = os.environ.get("SWIFT_ANDROID_ARCH")
 
         if arch == "aarch64" or arch is None:
@@ -182,11 +182,11 @@ class BuildConfig(object):
         arch = os.environ.get("SWIFT_ANDROID_ARCH")
 
         if arch == "aarch64" or arch is None:
-            return "TRIPPLE_AARCH64_LINUX_ANDROID"
+            return "TRIPLE_AARCH64_LINUX_ANDROID"
         elif arch == "x86_64":
-            return "TRIPPLE_X86_64_LINUX_ANDROID"
+            return "TRIPLE_X86_64_LINUX_ANDROID"
         elif arch == "armv7":
-            return "TRIPPLE_ARM_LINUX_ANDROID"
+            return "TRIPLE_ARM_LINUX_ANDROID"
         else:
             raise Exception("Unknown arch '{}'".format(arch))
 
@@ -224,7 +224,7 @@ class Dirs(object):
     @classmethod
     @memoized
     def external_libs_dir(cls):
-        return os.path.join(cls.external_out_dir(), BuildConfig.tripple())
+        return os.path.join(cls.external_out_dir(), BuildConfig.triple())
 
 class TestingApp(object):
     @classmethod

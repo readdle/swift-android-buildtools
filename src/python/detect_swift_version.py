@@ -20,8 +20,8 @@ def detect(sdk_home):
                     parts = version.split(".")
                     if len(parts) >= 2:
                         return "{}.{}".format(parts[0], parts[1])
-        except Exception:
-            pass
+        except (IOError, json.JSONDecodeError, KeyError) as e:
+            print("Warning: failed to parse {}: {}".format(sbom_path, e), file=sys.stderr)
     return DEFAULT_VERSION
 
 if __name__ == "__main__":
