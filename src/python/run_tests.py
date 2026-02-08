@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 
+import os, sys
+sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
+
 from utils import *
 from resources import copy_resources
-
-
-self_dir = os.path.dirname(__file__)
-swift_build = os.path.join(self_dir, "swift-android-build")
+from build import swift_build
 
 
 def push(dst, name, skip_push_stdlib, skip_push_external, skip_push_resources, device=None):
@@ -18,7 +18,8 @@ def push(dst, name, skip_push_stdlib, skip_push_external, skip_push_resources, d
         copy_resources(device)
 
     if not skip_push_stdlib:
-        ADB.push(dst, glob(join(SWIFT_ANDROID_HOME, "toolchain/usr/lib/swift/android/{}".format(BuildConfig.swift_abi()), "*.so*")), device)
+        ADB.push(dst, glob(join(SWIFT_ANDROID_SDK_HOME, "swift-android/swift-resources/usr/lib/swift-{}/android/".format(BuildConfig.swift_abi()), "*.so*")), device)
+        ADB.push(dst, glob(join(SWIFT_ANDROID_SDK_HOME, "swift-android/ndk-sysroot/usr/lib/{}/".format(BuildConfig.ndk_triple()), "libc++_shared.so")), device)
 
     if not skip_push_external:
         ADB.push(dst, glob(join(Dirs.external_libs_dir(), "*.so")), device)
@@ -44,9 +45,7 @@ def run(args):
     skip_testing = args.skip_testing
 
     if not skip_build:
-        sh_checked(
-            [swift_build, "--build-tests"] + args.build_args
-        )
+        swift_build(["--build-tests"] + args.build_args)
 
     name = TestingApp.get_name()
     folder = TestingApp.get_folder(name)

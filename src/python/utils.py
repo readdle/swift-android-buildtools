@@ -3,24 +3,10 @@ import os
 import subprocess
 import sys
 
-SWIFT_ANDROID_HOME = os.getenv("SWIFT_ANDROID_HOME")
+from detect_swift_version import detect as _detect_swift_version
 
-def find_swift_toolchain():
-    # Check common locations for Swift 6.1 toolchain
-    toolchain_paths = [
-        os.path.expanduser("~/Library/Developer/Toolchains/swift-6.1-RELEASE.xctoolchain"),
-        "/Library/Developer/Toolchains/swift-6.1-RELEASE.xctoolchain"
-    ]
-    
-    for path in toolchain_paths:
-        if os.path.isdir(path):
-            return path
-            
-    raise Exception("Swift 6.1 toolchain not found. Please install it from https://www.swift.org/install/macos")
-
-def get_swift_command():
-    toolchain = find_swift_toolchain()
-    return os.path.join(toolchain, "usr/bin/swift")
+SWIFT_ANDROID_SDK_HOME = os.getenv("SWIFT_ANDROID_SDK_HOME") or os.path.expanduser("~/Library/org.swift.swiftpm/swift-sdks/readdle-swift-6.2.1-RELEASE_android.artifactbundle")
+SWIFT_VERSION = _detect_swift_version(SWIFT_ANDROID_SDK_HOME)
 
 def memoized(func):
     state = type("State", (object,), {
@@ -82,7 +68,7 @@ def _get_packages_tree():
     os_env["BUILD_ANDROID"] = "1"
 
     json_output = subprocess.check_output([
-        get_swift_command(), "package", "show-dependencies", "-Xbuild-tools-swiftc", "-DTARGET_ANDROID", "--format", "json"
+        "swiftly", "run", "+{}".format(SWIFT_VERSION), "swift", "package", "show-dependencies", "-Xbuild-tools-swiftc", "-DTARGET_ANDROID", "-Xbuild-tools-swiftc", "-D{}".format(BuildConfig.triple_flag()), "--format", "json"
     ], env = os_env)
 
     if sys.version_info.major >= 3:
@@ -104,7 +90,7 @@ def get_package_description():
     os_env["BUILD_ANDROID"] = "1"
 
     json_output = subprocess.check_output([
-        get_swift_command(), "package", "dump-package", "-Xbuild-tools-swiftc", "-DTARGET_ANDROID"
+        "swiftly", "run", "+{}".format(SWIFT_VERSION), "swift", "package", "dump-package", "-Xbuild-tools-swiftc", "-DTARGET_ANDROID", "-Xbuild-tools-swiftc", "-D{}".format(BuildConfig.triple_flag())
     ], env=os_env)
 
     return json.loads(json_output)
@@ -131,14 +117,12 @@ class BuildConfig(object):
             return "x86_64-unknown-linux-android{}".format(level)
         elif arch == "armv7":
             return "armv7-unknown-linux-androideabi{}".format(level)
-        elif arch == "i686":
-            return "i686-unknown-linux-android{}".format(level)
         else:
             raise Exception("Unknown arch '{}'".format(arch))
 
     @classmethod
     @memoized
-    def tripple(cls):
+    def triple(cls):
         arch = os.environ.get("SWIFT_ANDROID_ARCH")
 
         if arch == "aarch64" or arch is None:
@@ -147,8 +131,20 @@ class BuildConfig(object):
             return "x86_64-linux-android"
         elif arch == "armv7":
             return "armv7-linux-androideabi"
-        elif arch == "i686":
-            return "i686-linux-android"
+        else:
+            raise Exception("Unknown arch '{}'".format(arch))
+
+    @classmethod
+    @memoized
+    def ndk_triple(cls):
+        arch = os.environ.get("SWIFT_ANDROID_ARCH")
+
+        if arch == "aarch64" or arch is None:
+            return "aarch64-linux-android"
+        if arch == "x86_64":
+            return "x86_64-linux-android"
+        elif arch == "armv7":
+            return "arm-linux-androideabi"
         else:
             raise Exception("Unknown arch '{}'".format(arch))
 
@@ -163,8 +159,6 @@ class BuildConfig(object):
             return "x86_64"
         elif arch == "armv7":
             return "armeabi-v7a"
-        elif arch == "i686":
-            return "x86"
         else:
             raise Exception("Unknown arch '{}'".format(arch))
 
@@ -179,11 +173,22 @@ class BuildConfig(object):
             return "x86_64"
         elif arch == "armv7":
             return "armv7"
-        elif arch == "i686":
-            return "i686"
         else:
             raise Exception("Unknown arch '{}'".format(arch))
 
+    @classmethod
+    @memoized
+    def triple_flag(cls):
+        arch = os.environ.get("SWIFT_ANDROID_ARCH")
+
+        if arch == "aarch64" or arch is None:
+            return "TRIPLE_AARCH64_LINUX_ANDROID"
+        elif arch == "x86_64":
+            return "TRIPLE_X86_64_LINUX_ANDROID"
+        elif arch == "armv7":
+            return "TRIPLE_ARM_LINUX_ANDROID"
+        else:
+            raise Exception("Unknown arch '{}'".format(arch))
 
     @classmethod
     def configuration(cls):
@@ -219,7 +224,7 @@ class Dirs(object):
     @classmethod
     @memoized
     def external_libs_dir(cls):
-        return os.path.join(cls.external_out_dir(), BuildConfig.tripple())
+        return os.path.join(cls.external_out_dir(), BuildConfig.triple())
 
 class TestingApp(object):
     @classmethod
@@ -287,7 +292,7 @@ def copytree(src, dst):
 
 
 def check_swift_home():
-    if SWIFT_ANDROID_HOME is None or not os.path.isdir(SWIFT_ANDROID_HOME):
-        print("SWIFT_ANDROID_HOME not set execution stopped")
+    if SWIFT_ANDROID_SDK_HOME is None or not os.path.isdir(SWIFT_ANDROID_SDK_HOME):
+        print("SWIFT_ANDROID_SDK_HOME not set execution stopped")
         sys.exit(127)
 
