@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
 
+import json
+import re
+import time
+
 from utils import *
 from resources import copy_resources
 
@@ -34,6 +38,125 @@ def exec_tests(folder, name, args, device=None):
     ADB.shell([ld_path, test_path] + args, device)
 
 
+def _exec_tests_capture(folder, name, args, device=None):
+    """Run tests and capture stdout. Returns (exit_code, stdout_str)."""
+    ld_path = "LD_LIBRARY_PATH=" + folder
+    test_path = folder + "/" + name
+
+    env = []
+    for key, value in os.environ.items():
+        if key.startswith("X_ANDROID"):
+            env_name = key[len("X_ANDROID_"):]
+            env.append(env_name + "=" + value)
+
+    cmd = ADB._base_args(device) + ["shell"] + env + [ld_path, test_path] + args
+    process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    stdout, _ = process.communicate()
+
+    if sys.version_info.major >= 3:
+        stdout = stdout.decode()
+
+    return process.returncode, stdout
+
+
+def list_test_classes(folder, name, device=None):
+    """Query the test binary for all available test classes via --dump-tests-json."""
+    ld_path = "LD_LIBRARY_PATH=" + folder
+    test_path = folder + "/" + name
+
+    output = ADB.shell_output([ld_path, test_path, "--dump-tests-json"], device)
+    output = output.strip()
+
+    if not output:
+        print("Error: --dump-tests-json returned empty output", file=sys.stderr)
+        sys.exit(1)
+
+    json_start = output.find("{")
+    if json_start > 0:
+        output = output[json_start:]
+
+    try:
+        tests_json = json.loads(output)
+    except json.JSONDecodeError:
+        print("Error: --dump-tests-json returned invalid JSON:", file=sys.stderr)
+        print(output[:500], file=sys.stderr)
+        sys.exit(1)
+
+    classes = []
+    for test_suite in tests_json.get("tests", []):
+        for test_class in test_suite.get("tests", []):
+            class_name = test_class.get("name", "")
+            if class_name:
+                classes.append(class_name)
+    return classes
+
+
+_EXECUTED_RE = re.compile(
+    r"Executed (\d+) tests?, with (\d+) failures? \((\d+) unexpected\) in ([\d.]+) \(([\d.]+)\) seconds"
+)
+
+
+def _parse_xctest_summary(output):
+    """Extract test counts from XCTest output. Returns (executed, failures, unexpected, wall_time)."""
+    for line in reversed(output.splitlines()):
+        m = _EXECUTED_RE.search(line)
+        if m:
+            return int(m.group(1)), int(m.group(2)), int(m.group(3)), float(m.group(5))
+    return 0, 0, 0, 0.0
+
+
+def exec_tests_sequential(folder, name, test_args, device=None):
+    """Run each test class in its own process and aggregate results."""
+    classes = list_test_classes(folder, name, device)
+
+    if not classes:
+        print("No test classes found!")
+        sys.exit(1)
+
+    total_classes = len(classes)
+    print("Found {} test classes, running sequentially".format(total_classes))
+
+    start_time = time.time()
+
+    total_executed = 0
+    total_failures = 0
+    total_unexpected = 0
+    total_wall = 0.0
+    failed_classes = []
+
+    for i, cls_name in enumerate(classes):
+        exit_code, output = _exec_tests_capture(folder, name, test_args + [cls_name], device)
+
+        sys.stdout.write(output)
+        sys.stdout.flush()
+
+        executed, failures, unexpected, wall = _parse_xctest_summary(output)
+        total_executed += executed
+        total_failures += failures
+        total_unexpected += unexpected
+        total_wall += wall
+
+        if exit_code != 0:
+            failed_classes.append(cls_name)
+
+    elapsed = time.time() - start_time
+    passed = total_failures == 0
+
+    status = "passed" if passed else "failed"
+    ts = time.strftime("%Y-%m-%d %H:%M:%S.000")
+
+    print("Test Suite 'All tests' {} at {}".format(status, ts))
+    print("\t Executed {} tests, with {} failures ({} unexpected) in {:.3f} ({:.3f}) seconds".format(
+        total_executed, total_failures, total_unexpected, total_wall, elapsed
+    ))
+
+    if failed_classes:
+        print("\nFailed test suites:")
+        for cls_name in failed_classes:
+            print("  - {}".format(cls_name))
+        sys.exit(1)
+
+
 def run(args):
     skip_build = args.skip_build or args.fast_mode
     skip_push = args.skip_push or args.fast_mode
@@ -55,7 +178,10 @@ def run(args):
         push(folder, name, skip_push_stdlib, skip_push_external, skip_push_resources, args.device)
 
     if not skip_testing:
-        exec_tests(folder, name, args.test_args, args.device)
+        if args.all_at_once:
+            exec_tests(folder, name, args.test_args, args.device)
+        else:
+            exec_tests_sequential(folder, name, args.test_args, args.device)
 
 
 def main():
@@ -133,6 +259,14 @@ def main():
         action="store_true",
         default=False,
         help="Skip pushing resources to the device."
+    )
+
+    parser.add_argument(
+        "--all-at-once",
+        dest="all_at_once",
+        action="store_true",
+        default=False,
+        help="Run all tests in a single process instead of one class at a time"
     )
 
     parser.add_argument(
