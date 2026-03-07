@@ -108,55 +108,80 @@ def _parse_xctest_summary(output):
     return 0, 0, 0, 0.0
 
 
+def _filter_class_output(output):
+    """Strip the 'Selected tests' suite wrapper so per-class output can be unified."""
+    lines = output.splitlines(True)
+    filtered = []
+    skip_next_executed = False
+    for line in lines:
+        if "Test Suite 'Selected tests'" in line:
+            skip_next_executed = True
+            continue
+        if skip_next_executed and "Executed" in line:
+            skip_next_executed = False
+            continue
+        skip_next_executed = False
+        filtered.append(line)
+    return "".join(filtered)
+
+
 def exec_tests_sequential(folder, name, test_args, device=None):
-    """Run each test class in its own process and aggregate results."""
-    classes = list_test_classes(folder, name, device)
+    """Run each test class in its own process and aggregate results.
+
+    When test_args contains filters, each filter is run in its own process
+    instead of discovering classes automatically.
+    """
+    if test_args:
+        classes = test_args
+    else:
+        classes = list_test_classes(folder, name, device)
 
     if not classes:
         print("No test classes found!")
         sys.exit(1)
 
-    total_classes = len(classes)
-    print("Found {} test classes, running sequentially".format(total_classes))
-
     start_time = time.time()
 
-    total_executed = 0
-    total_failures = 0
-    total_unexpected = 0
-    total_wall = 0.0
     failed_classes = []
+    crashed_classes = []
 
-    for i, cls_name in enumerate(classes):
-        exit_code, output = _exec_tests_capture(folder, name, test_args + [cls_name], device)
+    for cls_name in classes:
+        exit_code, output = _exec_tests_capture(folder, name, [cls_name], device)
 
-        sys.stdout.write(output)
+        sys.stdout.write(_filter_class_output(output))
         sys.stdout.flush()
 
-        executed, failures, unexpected, wall = _parse_xctest_summary(output)
-        total_executed += executed
-        total_failures += failures
-        total_unexpected += unexpected
-        total_wall += wall
-
         if exit_code != 0:
-            failed_classes.append(cls_name)
+            executed, _, _, _ = _parse_xctest_summary(output)
+            if executed > 0:
+                failed_classes.append(cls_name)
+            else:
+                crashed_classes.append(cls_name)
 
     elapsed = time.time() - start_time
-    passed = total_failures == 0
+    total = len(classes)
+    bad = len(failed_classes) + len(crashed_classes)
+    passed = total - bad
 
-    status = "passed" if passed else "failed"
-    ts = time.strftime("%Y-%m-%d %H:%M:%S.000")
+    status = "passed" if bad == 0 else "failed"
 
-    print("Test Suite 'All tests' {} at {}".format(status, ts))
-    print("\t Executed {} tests, with {} failures ({} unexpected) in {:.3f} ({:.3f}) seconds".format(
-        total_executed, total_failures, total_unexpected, total_wall, elapsed
+    parts = ["{} passed".format(passed)]
+    if failed_classes:
+        parts.append("{} failed".format(len(failed_classes)))
+    if crashed_classes:
+        parts.append("{} crashed".format(len(crashed_classes)))
+
+    print("Test Suite 'All tests' {}".format(status))
+    print("\t Executed {} test suites: {} in {:.3f} seconds".format(
+        total, ", ".join(parts), elapsed
     ))
 
-    if failed_classes:
-        print("\nFailed test suites:")
-        for cls_name in failed_classes:
+    if crashed_classes:
+        print("\nCrashed test suites:")
+        for cls_name in crashed_classes:
             print("  - {}".format(cls_name))
+
+    if failed_classes or crashed_classes:
         sys.exit(1)
 
 
@@ -179,10 +204,10 @@ def run(args):
         push(folder, name, skip_push_stdlib, skip_push_external, skip_push_resources, args.device)
 
     if not skip_testing:
-        if args.all_at_once:
-            exec_tests(folder, name, args.test_args, args.device)
-        else:
+        if args.isolate:
             exec_tests_sequential(folder, name, args.test_args, args.device)
+        else:
+            exec_tests(folder, name, args.test_args, args.device)
 
 
 def main():
@@ -263,11 +288,12 @@ def main():
     )
 
     parser.add_argument(
-        "--all-at-once",
-        dest="all_at_once",
+        "--isolate",
+        dest="isolate",
         action="store_true",
         default=False,
-        help="Run all tests in a single process instead of one class at a time"
+        help="Run each test class in its own process for crash isolation.\n"
+             "A crash in one class won't prevent remaining classes from running."
     )
 
     parser.add_argument(

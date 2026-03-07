@@ -187,6 +187,7 @@ swift-android test [options...] [-Xbuild <arg>] [-Xtest <arg>]
 | Flag | Description |
 |---|---|
 | `--skip-testing` | Don't execute tests on the device after building and deploying. Useful for deploying, then manually running with tools like `simpleperf`, `lldb`, etc. |
+| `--isolate` | Run each test class in its own process. A crash or resource leak in one class won't prevent remaining classes from executing. Results are aggregated into a single summary. |
 
 #### Argument Forwarding
 
@@ -220,6 +221,8 @@ Deploys the following to the Android device at `/data/local/tmp/<Package>Package
 #### Phase 3: Execute
 
 Runs the test binary on the device via `adb shell` with `LD_LIBRARY_PATH` set to the deployment directory. Any `X_ANDROID_*` host environment variables are forwarded as environment variables on the device.
+
+With `--isolate`, the runner first queries the test binary for all available test classes (via `--dump-tests-json`), then spawns a separate process for each class. This provides crash isolation - if one class crashes, the remaining classes still execute. Results are aggregated into a single summary at the end.
 
 ### Examples
 
@@ -281,6 +284,12 @@ swift-android test --skip-push-stdlib --skip-push-external
 
 ```bash
 swift-android test -Xbuild -c -Xbuild release
+```
+
+**Isolate test classes (each runs in its own process):**
+
+```bash
+swift-android test --isolate
 ```
 
 **Forward environment variables to the device:**
