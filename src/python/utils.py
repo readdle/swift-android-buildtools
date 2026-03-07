@@ -150,22 +150,6 @@ class BuildConfig(object):
 
     @classmethod
     @memoized
-    def tripple(cls):
-        arch = os.environ.get("SWIFT_ANDROID_ARCH")
-
-        if arch == "aarch64" or arch is None:
-            return "aarch64-linux-android"
-        if arch == "x86_64":
-            return "x86_64-linux-android"
-        elif arch == "armv7":
-            return "armv7-linux-androideabi"
-        elif arch == "i686":
-            return "i686-linux-android"
-        else:
-            raise Exception("Unknown arch '{}'".format(arch))
-
-    @classmethod
-    @memoized
     def abi(cls):
         arch = os.environ.get("SWIFT_ANDROID_ARCH")
 
