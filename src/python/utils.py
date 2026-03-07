@@ -264,6 +264,33 @@ class ADB(object):
         sh_checked(cls._base_args(device) + ["shell"] + env + args)
 
     @classmethod
+    def shell_output(cls, args, device=None):
+        """Run adb shell and capture stdout as a string."""
+        env = []
+
+        for key, value in os.environ.items():
+            if key.startswith("X_ANDROID"):
+                name = key[len("X_ANDROID_"):]
+                env.append(name + "=" + value)
+
+        cmd = cls._base_args(device) + ["shell"] + env + args
+        process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        stdout, stderr = process.communicate()
+
+        if sys.version_info.major >= 3:
+            stdout = stdout.decode()
+            stderr = stderr.decode()
+
+        if process.returncode != 0:
+            print("adb shell failed (exit code {}):".format(process.returncode), file=sys.stderr)
+            print("  cmd: {}".format(" ".join(cmd)), file=sys.stderr)
+            print("  stderr: {}".format(stderr.strip()), file=sys.stderr)
+            print("  stdout: {}".format(stdout.strip()), file=sys.stderr)
+            sys.exit(process.returncode)
+
+        return stdout
+
+    @classmethod
     def makedirs(cls, dir, device=None):
         cls.shell(["mkdir", "-p", dir], device)
         cls.shell(["chmod", "777", dir], device)
