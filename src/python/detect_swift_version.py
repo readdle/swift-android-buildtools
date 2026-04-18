@@ -17,6 +17,8 @@ def detect(sdk_home):
             for package in sbom.get("packages", []):
                 if package.get("name") == "swift":
                     version = package.get("versionInfo", "")
+                    # Strip suffix like "-RELEASE" so "6.3-RELEASE" becomes "6.3"
+                    version = version.split("-")[0]
                     parts = version.split(".")
                     if len(parts) >= 2:
                         return "{}.{}".format(parts[0], parts[1])
