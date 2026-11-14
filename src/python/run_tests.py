@@ -57,7 +57,7 @@ def _exec_tests_capture(folder, name, args, device=None):
     stdout, _ = process.communicate()
 
     if sys.version_info.major >= 3:
-        stdout = stdout.decode()
+        stdout = stdout.decode(errors="replace")
 
     return process.returncode, stdout
 

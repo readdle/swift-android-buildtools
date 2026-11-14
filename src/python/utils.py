@@ -278,8 +278,8 @@ class ADB(object):
         stdout, stderr = process.communicate()
 
         if sys.version_info.major >= 3:
-            stdout = stdout.decode()
-            stderr = stderr.decode()
+            stdout = stdout.decode(errors="replace")
+            stderr = stderr.decode(errors="replace")
 
         if process.returncode != 0:
             print("adb shell failed (exit code {}):".format(process.returncode), file=sys.stderr)
